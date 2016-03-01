@@ -14,7 +14,7 @@ def get_urls(url_file_path):
     url_list = []
     with open(url_file_path, 'r') as f1:
         for line in f1:
-            url_list.append(line)
+            url_list.append(line.strip())
 
     return url_list
 
@@ -26,7 +26,12 @@ def get_availability(url):
     if response.status_code >= 300:
         return 'error'
     else:
-        return response.content.decode('utf-8')
+        body = response.content.decode('utf-8')
+        if url.endswith('html'):
+            tag_pos = body.find('class="status"')
+            return body[tag_pos:tag_pos + 50]
+        else:
+            return body
 
 
 if __name__ == '__main__':
