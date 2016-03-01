@@ -49,7 +49,6 @@ if __name__ == '__main__':
 
     # Format the website output to file.
     with open(availability_file_path, 'a') as out_file:
-        out_file.write('\n')
-        out_file.write('\n')
+        out_file.write('\n\n\n')
         for line in availability_list:
-            out_file.write(timestamp() + ' --> ' + line + '\n')
+            out_file.write(timestamp() + '~' + url + '~' + line + '\n\n')
