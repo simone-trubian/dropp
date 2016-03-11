@@ -1,4 +1,6 @@
 from time import sleep
+from json import load
+from boto import ses
 from datetime import datetime
 from sys import argv
 from requests import get
@@ -38,9 +40,25 @@ if __name__ == '__main__':
 
     url_file_path = argv[1]
     availability_file_path = argv[2]
+    credentials_file = argv[3]
 
     url_list = get_urls(url_file_path)
     availability_list = []
+    with open(credentials_file, 'r') as file:
+        creds = load(file)
+
+    # Open a connection to AWS.
+    conn = ses.connect_to_region(
+        'eu-west-1',
+        aws_access_key_id=creds['ACCESS_KEY_ID'],
+        aws_secret_access_key=creds['SECRET_ACCESS_KEY'])
+
+    # Fetch subscribed recipients.
+    subscribed_users = conn.list_verified_email_addresses()
+    email_addrs = subscribed_users[
+        'ListVerifiedEmailAddressesResponse'][
+            'ListVerifiedEmailAddressesResult'][
+                'VerifiedEmailAddresses']
 
     # Interrogate Bangood website.
     for url in url_list:
@@ -48,7 +66,19 @@ if __name__ == '__main__':
         sleep(3)
 
     # Format the website output to file.
+    output_list = []
+    for url, line in zip(url_list, availability_list):
+        output_list.append(timestamp() + '~' + url + '~' + line + '\n\n')
+
+    # Write to output file.
     with open(availability_file_path, 'a') as out_file:
         out_file.write('\n\n\n')
-        for url, line in zip(url_list, availability_list):
-            out_file.write(timestamp() + '~' + url + '~' + line + '\n\n')
+        for line in output_list:
+            out_file.write(line)
+
+    # Send emails.
+    conn.send_email(
+        email_addrs[0],
+        timestamp() + ' Availability',
+        '\n'.join(map(str, output_list)),
+        email_addrs)
