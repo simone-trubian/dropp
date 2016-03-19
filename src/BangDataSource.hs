@@ -6,17 +6,19 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
+
 module BangDataSource
-  ( getHTML
+  ( HttpException
+  , getHTML
   , initDataSource
-  , HttpException(..)
   ) where
+
 
 import Data.Typeable
 import Control.Monad (void)
 import Text.Printf (printf)
 import Control.Concurrent.Async (mapConcurrently)
-import Data.ByteString.Lazy (ByteString (..))
+import Data.ByteString.Lazy (ByteString)
 
 import Data.Hashable
   ( Hashable
@@ -43,7 +45,7 @@ import Control.Exception
   , try)
 
 import Network.HTTP.Conduit
-  ( Manager (..)
+  ( Manager
   , HttpException
   , newManager
   , tlsManagerSettings
@@ -100,11 +102,12 @@ instance DataSource u BangReq where
 
 fetchURL :: Manager -> BlockedFetch BangReq -> IO ()
 fetchURL mgr (BlockedFetch (GetHTML url) var) = do
-  e <- try $ do
-    req <- parseUrl url
-    responseBody <$> httpLbs req mgr
-  either (putFailure var) (putSuccess var)
-    (e :: Either SomeException HTML)
+    e <- try $ do
+        req <- parseUrl url
+        responseBody <$> httpLbs req mgr
+
+    either (putFailure var) (putSuccess var)
+        (e :: Either SomeException HTML)
 
 
 -- ------------------------------------------------------------------------- --
