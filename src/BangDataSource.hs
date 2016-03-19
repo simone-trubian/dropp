@@ -18,6 +18,7 @@ import Data.Typeable
 import Control.Monad (void)
 import Text.Printf (printf)
 import Control.Concurrent.Async (mapConcurrently)
+import Control.Concurrent (threadDelay)
 import Data.ByteString.Lazy (ByteString)
 
 import Data.Hashable
@@ -93,15 +94,19 @@ initDataSource :: IO (State BangReq)
 initDataSource = HttpState <$> newManager tlsManagerSettings
 
 
+-- Why `void`?
+-- `void $ mapM ..` equals to `mapM_` that is it discards the results of an IO
+-- action. The reason why it is used here is that there is no version of
+-- `mapConcurrently` that does that.
 instance DataSource u BangReq where
   fetch (HttpState mgr) _flags _userEnv blockedFetches =
-    SyncFetch $ do
-       printf "Fetching %d urls.\n" (length blockedFetches)
-       void $ mapConcurrently (fetchURL mgr) blockedFetches
+    SyncFetch $ void $ mapConcurrently (fetchURL mgr) blockedFetches
 
 
 fetchURL :: Manager -> BlockedFetch BangReq -> IO ()
 fetchURL mgr (BlockedFetch (GetHTML url) var) = do
+    printf "Fetching url.\n"
+    threadDelay 1000000
     e <- try $ do
         req <- parseUrl url
         responseBody <$> httpLbs req mgr

@@ -20,10 +20,12 @@ getAvailability fetches = do
     runHaxl environment fetches
 
 
-urls = ["http://google.com"]
+urls =
+   [ "http://google.com"
+   , "http://haskell.org"]
 
 
 main :: IO ()
 main = do
     page <- getAvailability $ mapM getHTML urls
-    print page
+    print $ length page
