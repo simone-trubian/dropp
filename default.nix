@@ -4,13 +4,12 @@ let
   cabal = pkgs.cabal-install;
   ghc = pkgs.haskell.packages.${compiler}.ghcWithPackages (ps: with ps; [
     hlint
-    wreq
-    resourcet
+    http-conduit
     haxl
   ]);
 in
 pkgs.stdenv.mkDerivation {
-  name = "dropp-haxl";
+  name = "dropp";
   buildInputs = [
     cabal
     ghc
