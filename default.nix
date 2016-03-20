@@ -5,6 +5,8 @@ let
   ghc = pkgs.haskell.packages.${compiler}.ghcWithPackages (ps: with ps; [
     hlint
     http-conduit
+    html-conduit
+    xml-conduit
     haxl
   ]);
 in
