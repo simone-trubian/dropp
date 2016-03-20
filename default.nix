@@ -3,11 +3,12 @@ let
   inherit (nixpkgs) pkgs;
   cabal = pkgs.cabal-install;
   ghc = pkgs.haskell.packages.${compiler}.ghcWithPackages (ps: with ps; [
-    hlint
     http-conduit
     html-conduit
     xml-conduit
+    text
     haxl
+    hlint
   ]);
 in
 pkgs.stdenv.mkDerivation {

@@ -3,6 +3,7 @@ module Main where
 
 import BangDataSource
 import Text.HTML.DOM (parseLBS)
+import Data.Text.Internal (Text)
 import Haxl.Core
   ( GenHaxl
   , initEnv
@@ -12,8 +13,12 @@ import Haxl.Core
 
 import Text.XML.Cursor
   ( ($//)
+  , ($|)
+  , (>=>)
+  , attributeIs
   , fromDocument
   , element
+  , content
   , child)
 
 
@@ -21,24 +26,53 @@ import Text.XML.Cursor
 type Haxl a = GenHaxl () a
 
 
-getTitNode page = (fromDocument . parseLBS) page $// (element "title")
+data Email = Email
+  { title :: Text
+  , availability :: Text}
 
-
-getTitCont = head . child . head . getTitNode
-
-
-getAvailability :: Haxl a -> IO a
-getAvailability fetches = do
-    dataSource <- initDataSource
-    environment <- initEnv (stateSet dataSource stateEmpty) ()
-    runHaxl environment fetches
+    deriving (Show, Eq, Ord)
 
 
 urls =
     [ "http://eu.banggood.com/Wholesale-Warehouse-1080P-HDMI-Male-To-VGA-Female-Adapter-Video-Converter-Cable-wp-Uk-937626.html"
     , "http://eu.banggood.com/Wholesale-Warehouse-Silver-Stainless-Steel-Pocket-Cigar-Cutter-Knife-Double-Blades-wp-Uk-44851.html"]
 
+
 main :: IO ()
 main = do
-    pages <- getAvailability $ mapM getHTML urls
-    print $ map getTitCont pages
+    pages <- getPages $ mapM getHTML urls
+    print $ map makeBlock pages
+
+
+parseTitle cursor =
+    head . content . head $
+    cursor $//
+    element "title" >=>
+    child
+
+
+parseAvailability cursor =
+    head . content . head $
+    cursor $//
+    element "div" >=>
+    attributeIs "class" "status" >=>
+    child
+
+
+makeBlock page = Email (getTitle) (getAvailability)
+
+    where
+        getTitle = parseTitle $ (fromDocument . parseLBS) page
+        getAvailability = parseAvailability $ (fromDocument . parseLBS) page
+
+getTitleNode = parseTitle . (fromDocument . parseLBS)
+
+
+getAvailabilityNode = parseAvailability . (fromDocument . parseLBS)
+
+
+getPages :: Haxl a -> IO a
+getPages fetches = do
+    dataSource <- initDataSource
+    environment <- initEnv (stateSet dataSource stateEmpty) ()
+    runHaxl environment fetches
