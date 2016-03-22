@@ -2,6 +2,7 @@ module Main where
 
 
 import BangDataSource
+import Data.Time.Clock (getCurrentTime)
 import Text.HTML.DOM (parseLBS)
 import Data.Text.Internal (Text)
 import Haxl.Core
@@ -30,7 +31,8 @@ data Email = Email
   { title :: Text
   , availability :: Text}
 
-    deriving (Show, Eq, Ord)
+instance Show Email where
+    show (Email title availability) = show title ++ "\n" ++ show availability
 
 
 urls =
@@ -41,7 +43,9 @@ urls =
 main :: IO ()
 main = do
     pages <- getPages $ mapM getHTML urls
-    print $ map makeBlock pages
+    now <- getCurrentTime
+    let formatOutput = (concatMap (++"\n")) . (map show) . map makeBlock
+    print $ (show now) ++ "\n" ++ formatOutput pages
 
 
 parseTitle cursor =

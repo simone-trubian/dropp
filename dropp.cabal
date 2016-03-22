@@ -29,3 +29,4 @@ executable dropp
     , xml-conduit >= 1.3.2
     , async >= 2.0.2
     , text >= 1.2.1.3
+    , time >= 1.5.0
