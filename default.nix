@@ -8,6 +8,8 @@ let
     xml-conduit
     text
     haxl
+    amazonka
+    amazonka-ses
     hlint
   ]);
 in

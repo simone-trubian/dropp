@@ -30,3 +30,6 @@ executable dropp
     , async >= 2.0.2
     , text >= 1.2.1.3
     , time >= 1.5.0
+    , amazonka >= 1.3.5
+    , amazonka-ses >= 1.3.5
+    , lens >= 4.0
