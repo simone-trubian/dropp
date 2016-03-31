@@ -1,7 +1,7 @@
 module Main where
 
 
-import BangDataSource
+import HttpDataSource
 import System.Environment (getArgs)
 import Data.Time.Clock (getCurrentTime)
 import Text.HTML.DOM (parseLBS)

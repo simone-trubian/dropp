@@ -7,7 +7,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 
-module BangDataSource
+module HttpDataSource
   ( HttpException
   , getHTML
   , initDataSource
@@ -65,32 +65,32 @@ type URL = String
 type HTML = ByteString
 
 
-data BangReq a where
-  GetHTML :: URL -> BangReq HTML
+data HttpReq a where
+  GetHTML :: URL -> HttpReq HTML
 
-deriving instance Show (BangReq a)
+deriving instance Show (HttpReq a)
 
-deriving instance Typeable BangReq
+deriving instance Typeable HttpReq
 
-instance Show1 BangReq where show1 = show
+instance Show1 HttpReq where show1 = show
 
-deriving instance Eq (BangReq a)
+deriving instance Eq (HttpReq a)
 
-instance Hashable (BangReq a) where
+instance Hashable (HttpReq a) where
   hashWithSalt salt (GetHTML url) = hashWithSalt salt (0 :: Int, url)
 
-instance DataSourceName BangReq where
-  dataSourceName _ = "BangGoodDataSource"
+instance DataSourceName HttpReq where
+  dataSourceName _ = "HttpGoodDataSource"
 
-instance StateKey BangReq where
-  data State BangReq = HttpState Manager
+instance StateKey HttpReq where
+  data State HttpReq = HttpState Manager
 
 
 -- ------------------------------------------------------------------------- --
 --              IMPLEMENTATION
 -- ------------------------------------------------------------------------- --
 
-initDataSource :: IO (State BangReq)
+initDataSource :: IO (State HttpReq)
 initDataSource = HttpState <$> newManager tlsManagerSettings
 
 
@@ -98,12 +98,12 @@ initDataSource = HttpState <$> newManager tlsManagerSettings
 -- `void $ mapM ..` equals to `mapM_` that is it discards the results of an IO
 -- action. The reason why it is used here is that there is no version of
 -- `mapConcurrently` that does that.
-instance DataSource u BangReq where
+instance DataSource u HttpReq where
   fetch (HttpState mgr) _flags _userEnv blockedFetches =
     SyncFetch $ void $ mapConcurrently (fetchURL mgr) blockedFetches
 
 
-fetchURL :: Manager -> BlockedFetch BangReq -> IO ()
+fetchURL :: Manager -> BlockedFetch HttpReq -> IO ()
 fetchURL mgr (BlockedFetch (GetHTML url) var) = do
     printf "Fetching url.\n"
     threadDelay 1000000
