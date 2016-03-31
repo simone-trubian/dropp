@@ -1,5 +1,5 @@
 name: Dropp
-version: 0.3.0
+version: 0.3.1
 synopsis: Drop shipping system.
 license: BSD3
 license-file: LICENSE
@@ -20,7 +20,7 @@ executable dropp
       OverloadedStrings
 
   build-depends:
-      base >=4.8 && <4.9
+      base >=4.5 && <4.9
     , haxl >= 0.3.0
     , hashable >= 1.2.3.3
     , bytestring >= 0.4.24
