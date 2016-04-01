@@ -3,12 +3,22 @@ module Main where
 
 import HttpDataSource
 import System.Environment (getArgs)
-import Data.Time.Clock (getCurrentTime)
 import Text.HTML.DOM (parseLBS)
 import Data.Text.Internal (Text)
 import Data.Text (pack)
 import System.IO (stdout)
 import Data.ByteString.Lazy.Internal (ByteString)
+import Data.Time.Clock
+  ( UTCTime
+  , getCurrentTime)
+
+import Data.Time.LocalTime
+  ( TimeZone (TimeZone)
+  , utcToLocalTime)
+
+import Data.Time.Format
+  ( formatTime
+  , defaultTimeLocale)
 
 import Haxl.Core
   ( GenHaxl
@@ -84,9 +94,11 @@ main = do
     -- Fetch pages and construct response.
     pages <- getPages $ mapM getHTML (lines urls)
 
+    -- Get timestamp.
+    utcTime <- getCurrentTime
+
     -- Send email with AWS SES.
-    now <- getCurrentTime
-    let subText = pack $ "Avaliability " ++ show now
+    let subText = pack $ "Avaliability " ++ generateTime utcTime
 
     env <- newEnv Ireland Discover
     logger <- newLogger Debug stdout
@@ -94,6 +106,13 @@ main = do
         send $ generateEmail subText $  formatOutput pages
     return ()
 
+
+generateTime :: UTCTime -> String
+generateTime utcTime = formatTime defaultTimeLocale format cestTime
+  where
+    cestTime = utcToLocalTime cest utcTime
+    cest = TimeZone 120 True "CEST"
+    format = "%a %d/%m/%Y %R"
 
 -- ------------------------------------------------------------------------- --
 --              AWS SES SERVICE
