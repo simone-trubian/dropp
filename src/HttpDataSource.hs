@@ -10,8 +10,9 @@
 module HttpDataSource
   ( HttpException
   , getHTML
-  , initDataSource
-  ) where
+  , getPages
+  , initDataSource)
+  where
 
 
 import Data.Typeable
@@ -34,6 +35,10 @@ import Haxl.Core
   , GenHaxl
   , BlockedFetch (BlockedFetch)
   , PerformFetch (SyncFetch)
+  , initEnv
+  , stateSet
+  , stateEmpty
+  , runHaxl
   , show1
   , dataSourceName
   , dataFetch
@@ -53,6 +58,13 @@ import Network.HTTP.Conduit
   , parseUrl
   , responseBody
   , httpLbs)
+
+
+-- ------------------------------------------------------------------------- --
+--              TYPES
+-- ------------------------------------------------------------------------- --
+
+type Haxl a = GenHaxl () a
 
 
 -- ------------------------------------------------------------------------- --
@@ -121,3 +133,10 @@ fetchURL mgr (BlockedFetch (GetHTML url) var) = do
 
 getHTML :: URL -> GenHaxl u HTML
 getHTML = dataFetch . GetHTML
+
+
+getPages :: Haxl a -> IO a
+getPages fetches = do
+    dataSource <- initDataSource
+    environment <- initEnv (stateSet dataSource stateEmpty) ()
+    runHaxl environment fetches

@@ -18,13 +18,6 @@ import Data.Time.Format
   ( formatTime
   , defaultTimeLocale)
 
-import Haxl.Core
-  ( GenHaxl
-  , initEnv
-  , stateSet
-  , stateEmpty
-  , runHaxl)
-
 import Network.AWS
   ( Region (Ireland)
   , Credentials (Discover)
@@ -49,13 +42,6 @@ import Network.AWS.SES
 import Control.Lens
   ( (&)
   , (.~))
-
-
--- ------------------------------------------------------------------------- --
---              TYPES
--- ------------------------------------------------------------------------- --
-
-type Haxl a = GenHaxl () a
 
 
 -- ------------------------------------------------------------------------- --
@@ -107,10 +93,3 @@ generateEmail subText payload = sendEmail "stoxx84@gmail.com" dest msg
         msg = message subject body'
         subject = SES.content "" & cData .~ subText
         body' = body & bText .~ Just (SES.content payload)
-
-
-getPages :: Haxl a -> IO a
-getPages fetches = do
-    dataSource <- initDataSource
-    environment <- initEnv (stateSet dataSource stateEmpty) ()
-    runHaxl environment fetches
