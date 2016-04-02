@@ -8,7 +8,8 @@ import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Text.XML.Cursor
-  ( ($//)
+  ( Cursor
+  , ($//)
   , ($|)
   , (>=>)
   , attributeIs
@@ -31,6 +32,26 @@ instance Show Email where
         show title ++ "\n" ++ show availability ++ "\n"
 
 
+-- ------------------------------------------------------------------------- --
+--              BANGGOOD
+-- ------------------------------------------------------------------------- --
+
+formatOutput :: [ByteString] -> Text
+formatOutput = pack . concatMap ((++"\n") . show . makeBlock)
+
+
+makeBlock :: ByteString -> Email
+makeBlock page = Email getTitle getAvailability
+    where
+        getTitle = parseTitle $ makeCursor page
+        getAvailability = parseAvailability $ makeCursor page
+
+
+makeCursor :: ByteString -> Cursor
+makeCursor = fromDocument . parseLBS
+
+
+parseTitle :: Cursor -> Text
 parseTitle cursor =
     head . content . head $
     cursor $//
@@ -38,25 +59,10 @@ parseTitle cursor =
     child
 
 
+parseAvailability :: Cursor -> Text
 parseAvailability cursor =
     head . content . head $
     cursor $//
     element "div" >=>
     attributeIs "class" "status" >=>
     child
-
-
-makeBlock page = Email getTitle getAvailability
-    where
-        getTitle = parseTitle $ (fromDocument . parseLBS) page
-        getAvailability = parseAvailability $ (fromDocument . parseLBS) page
-
-
-getTitleNode = parseTitle . fromDocument . parseLBS
-
-
-getAvailabilityNode = parseAvailability . fromDocument . parseLBS
-
-
-formatOutput :: [ByteString] -> Text
-formatOutput = pack . concatMap ((++"\n") . show . makeBlock)

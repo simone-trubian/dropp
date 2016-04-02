@@ -65,11 +65,12 @@ main = do
     -- Send email with AWS SES.
     let subText = pack $ "Avaliability " ++ generateTime utcTime
 
-    env <- newEnv Ireland Discover
-    logger <- newLogger Debug stdout
-    _ <- runResourceT . runAWS (env & envLogger .~ logger) $
-        send $ generateEmail subText $  formatOutput pages
-    return ()
+    print $ formatOutput pages
+    -- env <- newEnv Ireland Discover
+    -- logger <- newLogger Debug stdout
+    -- _ <- runResourceT . runAWS (env & envLogger .~ logger) $
+    --     send $ generateEmail subText $  formatOutput pages
+    -- return ()
 
 
 generateTime :: UTCTime -> String
