@@ -1,5 +1,6 @@
 module HTML
-  ( formatOutput)
+  ( Email (Email)
+  , formatOutput)
   where
 
 
