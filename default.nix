@@ -10,11 +10,17 @@ let
     haxl
     amazonka
     amazonka-ses
+    blaze-html
+
+    # Testing
     hlint
+    tasty
+    tasty-hunit
   ]);
 in
 pkgs.stdenv.mkDerivation {
   name = "dropp";
+  version = "0.3.2.1";
   buildInputs = [
     cabal
     ghc

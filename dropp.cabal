@@ -1,5 +1,5 @@
-name: Dropp
-version: 0.3.2
+name: dropp
+version: 0.3.2.1
 synopsis: Drop shipping system.
 license: BSD3
 license-file: LICENSE
@@ -11,8 +11,7 @@ build-type: Simple
 cabal-version: >=1.10
 
 
-executable dropp
-  main-is: Main.hs
+library
   hs-source-dirs: src
   default-language: Haskell2010
 
@@ -29,7 +28,47 @@ executable dropp
     , xml-conduit >= 1.3.2
     , async >= 2.0.2
     , text >= 1.2.1.3
+    , lens >= 4.0
+    , blaze-html >= 0.8
+
+  exposed-modules:
+    HttpDataSource
+    HTML
+
+
+executable dropp
+  main-is: Main.hs
+  hs-source-dirs: src
+  default-language: Haskell2010
+
+  default-extensions:
+      OverloadedStrings
+
+  build-depends:
+      base >=4.8 && <4.9
+    , dropp
+    , hashable >= 1.2.3.3
+    , bytestring >= 0.4.24
+    , http-conduit >= 2.1.8
+    , html-conduit >= 1.2.0
+    , xml-conduit >= 1.3.2
+    , async >= 2.0.2
+    , text >= 1.2.1.3
     , time >= 1.5.0
     , amazonka >= 1.3.5
     , amazonka-ses >= 1.3.5
     , lens >= 4.0
+    , blaze-html >= 0.8
+
+
+test-suite test
+
+  default-language: Haskell2010
+  main-is: test.hs
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  build-depends:
+      dropp
+    , base >=4.8 && <4.9
+    , tasty >= 0.11.0.1
+    , tasty-hunit >= 0.9.2

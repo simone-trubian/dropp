@@ -7,6 +7,9 @@ import Data.Text.Internal (Text)
 import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
+import qualified Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5.Attributes as A
+
 import Text.XML.Cursor
   ( Cursor
   , ($//)
@@ -29,7 +32,7 @@ data Email = Email
 
 instance Show Email where
     show (Email title availability) =
-        show title ++ "\n" ++ show availability ++ "\n"
+        show title ++ "\n" ++ show availability
 
 
 -- ------------------------------------------------------------------------- --
@@ -42,9 +45,9 @@ formatOutput = pack . concatMap ((++"\n") . show . makeBlock)
 
 makeBlock :: ByteString -> Email
 makeBlock page = Email getTitle getAvailability
-    where
-        getTitle = parseTitle $ makeCursor page
-        getAvailability = parseAvailability $ makeCursor page
+  where
+    getTitle = parseTitle $ makeCursor page
+    getAvailability = parseAvailability $ makeCursor page
 
 
 makeCursor :: ByteString -> Cursor
