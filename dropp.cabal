@@ -47,6 +47,7 @@ executable dropp
   build-depends:
       base >=4.8 && <4.9
     , dropp
+    , haxl >= 0.3.0
     , hashable >= 1.2.3.3
     , bytestring >= 0.4.24
     , http-conduit >= 2.1.8
