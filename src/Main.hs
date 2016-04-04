@@ -34,7 +34,7 @@ import Network.AWS.SES
   ( sendEmail
   , dToAddresses
   , cData
-  , bText
+  , bHTML
   , destination
   , body
   , message)
@@ -93,4 +93,4 @@ generateEmail subText payload = sendEmail "stoxx84@gmail.com" dest msg
         dest = destination & dToAddresses .~ recipients
         msg = message subject body'
         subject = SES.content "" & cData .~ subText
-        body' = body & bText .~ Just (SES.content payload)
+        body' = body & bHTML .~ Just (SES.content payload)

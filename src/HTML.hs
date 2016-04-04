@@ -8,7 +8,14 @@ import Data.Text.Internal (Text)
 import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
-import qualified Text.Blaze.Html5 as H
+import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Blaze.Html5
+  ( Html
+  , docTypeHtml
+  , toHtml
+  , ul
+  , li)
+
 import qualified Text.Blaze.Html5.Attributes as A
 
 import Text.XML.Cursor
@@ -40,8 +47,14 @@ instance Show Email where
 --              BANGGOOD
 -- ------------------------------------------------------------------------- --
 
-formatOutput :: [ByteString] -> Text
-formatOutput = pack . concatMap ((++"\n") . show . makeBlock)
+formatOutput :: [ByteString] -> ByteString
+formatOutput pages = renderHtml $ ul $ mapM_ formatBlock pages
+
+
+formatBlock :: ByteString -> Html
+formatBlock page = ul $ do
+    li $ toHtml $ title $ makeBlock page
+    li $ toHtml $ availability $ makeBlock page
 
 
 makeBlock :: ByteString -> Email
