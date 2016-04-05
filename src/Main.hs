@@ -5,6 +5,8 @@ import HttpDataSource
 import HTML
 import System.Environment (getArgs)
 import Data.Text (pack)
+import Data.Text.Lazy.Encoding (decodeUtf8)
+import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
 import Data.Time.Clock
   ( UTCTime
@@ -65,12 +67,11 @@ main = do
     -- Send email with AWS SES.
     let subText = pack $ "Avaliability " ++ generateTime utcTime
 
-    print $ formatOutput pages
-    -- env <- newEnv Ireland Discover
-    -- logger <- newLogger Debug stdout
-    -- _ <- runResourceT . runAWS (env & envLogger .~ logger) $
-    --     send $ generateEmail subText $  formatOutput pages
-    -- return ()
+    env <- newEnv Ireland Discover
+    logger <- newLogger Debug stdout
+    _ <- runResourceT . runAWS (env & envLogger .~ logger) $
+        send $ generateEmail subText $ toStrict $ decodeUtf8 $ formatOutput pages
+    return ()
 
 
 generateTime :: UTCTime -> String

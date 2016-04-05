@@ -1,6 +1,7 @@
 module HTML
   ( Email (Email)
-  , formatOutput)
+  , formatOutput
+  , formatBlock)
   where
 
 
@@ -9,14 +10,14 @@ import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Blaze.Html5.Attributes (style)
 import Text.Blaze.Html5
   ( Html
-  , docTypeHtml
   , toHtml
   , ul
-  , li)
+  , li
+  , (!))
 
-import qualified Text.Blaze.Html5.Attributes as A
 
 import Text.XML.Cursor
   ( Cursor
@@ -52,9 +53,10 @@ formatOutput pages = renderHtml $ ul $ mapM_ formatBlock pages
 
 
 formatBlock :: ByteString -> Html
-formatBlock page = ul $ do
+formatBlock page = (ul $ do
     li $ toHtml $ title $ makeBlock page
-    li $ toHtml $ availability $ makeBlock page
+    li $ toHtml $ availability $ makeBlock page)
+    ! style "list-style-type:none"
 
 
 makeBlock :: ByteString -> Email
