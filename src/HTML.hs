@@ -49,14 +49,14 @@ instance Show Email where
 -- ------------------------------------------------------------------------- --
 
 formatOutput :: [ByteString] -> ByteString
-formatOutput pages = renderHtml $ ul (mapM_ formatBlock pages) ! style "margin:10px 0"
+formatOutput pages = renderHtml $ ul $ mapM_ formatBlock pages
 
 
 formatBlock :: ByteString -> Html
 formatBlock page = li $ (ul $ do
     li $ toHtml $ title $ makeBlock page
     li $ toHtml $ availability $ makeBlock page)
-    ! style "list-style-type:none"
+    ! style "list-style-type:none; margin:10px 0"
 
 
 makeBlock :: ByteString -> Email
