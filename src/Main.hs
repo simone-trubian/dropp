@@ -65,7 +65,7 @@ main = do
     utcTime <- getCurrentTime
 
     -- Send email with AWS SES.
-    let subText = pack $ "Avaliability " ++ generateTime utcTime
+    let subText = pack $ "Availability " ++ generateTime utcTime
 
     env <- newEnv Ireland Discover
     logger <- newLogger Debug stdout
