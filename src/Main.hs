@@ -85,7 +85,7 @@ generateTime utcTime = formatTime defaultTimeLocale format cestTime
 --              AWS SES SERVICE
 -- ------------------------------------------------------------------------- --
 
-recipients = ["stoxx84@gmail.com", "simone.trubian@ondait.com"]
+recipients = ["simone.trubian@ondait.com"]
 
 
 generateEmail subText payload = sendEmail "stoxx84@gmail.com" dest msg

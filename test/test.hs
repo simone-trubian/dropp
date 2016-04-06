@@ -24,4 +24,4 @@ email = testGroup "Email formatting tests"
 
 page = "<!DOCTYPE html><html><title>Title</title></head><body><div class=\"status\">Status</div></body>"
 
-result = "<ul style=\"list-style-type:none\"><li>Title</li><li>Status</li></ul>"
+result = "<li><ul style=\"list-style-type:none\"><li>Title</li><li>Status</li></ul></li>"
