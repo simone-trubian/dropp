@@ -35,6 +35,8 @@ import Text.XML.Cursor
 
 import Text.Parsec
   ( many1
+  , many
+  , noneOf
   , digit
   , parse)
 
@@ -81,11 +83,12 @@ renderAvailability block = (li $ toHtml $ content) ! style (color content)
 
 formatItemsCount :: Text -> AttributeValue
 formatItemsCount txt =
-  case (parse (many1 digit) "" txt) of
+  case (parse parser "" txt) of
     Right str -> decideCount str
     Left _ -> "color:blue"
 
   where
+    parser = many (noneOf ['0'..'9']) >> many1 digit
     decideCount str =
       case ((read str) > 5) of
         True -> "color:green"

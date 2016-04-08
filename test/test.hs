@@ -24,17 +24,33 @@ tests = testGroup "Tests" [email]
 
 
 email = testGroup "Email formatting tests"
-  [ testCase "Available status is formatted green" undefined
-  , testCase "More than five items are formatted green" undefined
-  , testCase "Less than five items are formatted orange" undefined
-  , testCase "No availability is formatted red" undefined
+  [ testCase "Available status is formatted green"
+      $ assertFormatting
+          "In stock, usually dispatched in 1 business day"
+          "color:green"
+
+  , testCase "More than five items are formatted green"
+      $ assertFormatting
+          "Only 10 units,dispatched in 1 business day"
+          "color:green"
+
+  , testCase "Less than five items are formatted orange"
+      $ assertFormatting
+          "Only 5 units,dispatched in 1 business day"
+          "color:orange"
+
+  , testCase "No availability is formatted red"
+      $ assertFormatting "Currently out of stock" "color:red"
+
   , testCase "Unexpected availability is formatted blue"
-    $ assertEqual "" (renderHtml $ formatBlock page) result]
+      $ assertFormatting "Status" "color:blue"]
 
 
-
-page = pageTemplate "Status"
-result = resultTemplate "Status" "color:blue"
+assertFormatting status color =
+    assertEqual
+        ""
+        (renderHtml $ formatBlock (pageTemplate status))
+        (resultTemplate status color)
 
 
 pageTemplate :: String -> ByteString
