@@ -11,6 +11,9 @@ import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Blaze.Html5.Attributes (style)
+import Text.Parsec.Pos (SourceName)
+import Text.Parsec.Error (ParseError)
+import Text.Blaze.Internal (AttributeValue)
 import Text.Blaze.Html5
   ( Html
   , toHtml
@@ -30,6 +33,10 @@ import Text.XML.Cursor
   , content
   , child)
 
+import Text.Parsec
+  ( many1
+  , digit
+  , parse)
 
 -- ------------------------------------------------------------------------- --
 --              TYPES
@@ -54,9 +61,37 @@ formatOutput pages = renderHtml $ ul $ mapM_ formatBlock pages
 
 formatBlock :: ByteString -> Html
 formatBlock page = li $ (ul $ do
-    li $ toHtml $ title $ makeBlock page
-    li $ toHtml $ availability $ makeBlock page)
+    li $ toHtml $ title block
+    renderAvailability block)
     ! style "list-style-type:none; margin:10px 0"
+
+  where
+    block = makeBlock page
+
+
+renderAvailability :: Email -> Html
+renderAvailability block = (li $ toHtml $ content) ! style (color content)
+  where
+    content = availability block
+    color txt
+      | txt == "Currently out of stock" = "color:red"
+      | txt == "In stock, usually dispatched in 1 business day" = "color:green"
+      | otherwise = formatItemsCount txt
+
+
+formatItemsCount :: Text -> AttributeValue
+formatItemsCount = undefined
+
+
+getItemsCount :: SourceName -> Text -> Either ParseError String
+getItemsCount pif = do
+    r <- parse (many1 digit) pif
+    return r
+
+
+-- getItemsCount :: SourceName -> Text -> Either ParseError String
+-- getItemsCount = case (parse (many1 digit)) of
+--     (Right String) -> undefined
 
 
 makeBlock :: ByteString -> Email
