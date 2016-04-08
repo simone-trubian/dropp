@@ -80,18 +80,16 @@ renderAvailability block = (li $ toHtml $ content) ! style (color content)
 
 
 formatItemsCount :: Text -> AttributeValue
-formatItemsCount = undefined
+formatItemsCount txt =
+  case (parse (many1 digit) "" txt) of
+    Right str -> decideCount str
+    Left _ -> "color:blue"
 
-
-getItemsCount :: SourceName -> Text -> Either ParseError String
-getItemsCount pif = do
-    r <- parse (many1 digit) pif
-    return r
-
-
--- getItemsCount :: SourceName -> Text -> Either ParseError String
--- getItemsCount = case (parse (many1 digit)) of
---     (Right String) -> undefined
+  where
+    decideCount str =
+      case ((read str) > 5) of
+        True -> "color:green"
+        False -> "color:orange"
 
 
 makeBlock :: ByteString -> Email
