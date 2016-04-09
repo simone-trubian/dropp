@@ -16,6 +16,7 @@ import Test.Tasty.HUnit
   , testCase)
 
 
+main :: IO ()
 main = defaultMain tests
 
 
@@ -23,6 +24,7 @@ tests :: TestTree
 tests = testGroup "Tests" [email]
 
 
+email :: TestTree
 email = testGroup "Email formatting tests"
   [ testCase "Available status is formatted green"
       $ assertFormatting
@@ -46,6 +48,7 @@ email = testGroup "Email formatting tests"
       $ assertFormatting "Status" "color:blue"]
 
 
+-- | Assert that availability string is formatted with the right colour.
 assertFormatting status color =
     assertEqual
         ""
