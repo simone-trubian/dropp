@@ -79,7 +79,7 @@ generateTime utcTime = formatTime defaultTimeLocale format cestTime
   where
     cestTime = utcToLocalTime cest utcTime
     cest = TimeZone 120 True "CEST"
-    format = "%a %d/%m/%Y %R"
+    format ="%a %d/%m/%Y %R"
 
 -- ------------------------------------------------------------------------- --
 --              AWS SES SERVICE
@@ -89,9 +89,8 @@ recipients = ["stoxx84@gmail.com", "simone.trubian@ondait.com"]
 
 
 generateEmail subText payload = sendEmail "stoxx84@gmail.com" dest msg
-
-    where
-        dest = destination & dToAddresses .~ recipients
-        msg = message subject body'
-        subject = SES.content "" & cData .~ subText
-        body' = body & bHTML .~ Just (SES.content payload)
+  where
+    dest = destination & dToAddresses .~ recipients
+    msg = message subject body'
+    subject = SES.content "" & cData .~ subText
+    body' = body & bHTML .~ Just (SES.content payload)
