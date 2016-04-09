@@ -5,6 +5,7 @@ import HttpDataSource
 import HTML
 import System.Environment (getArgs)
 import Data.Text (pack)
+import Data.Text.Internal (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
@@ -33,7 +34,8 @@ import Network.AWS
 
 import qualified Network.AWS.SES as SES
 import Network.AWS.SES
-  ( sendEmail
+  ( SendEmail
+  , sendEmail
   , dToAddresses
   , cData
   , bHTML
@@ -58,39 +60,54 @@ main = do
 
     urls <- readFile urlFile
 
-    -- Fetch pages and construct response.
+    -- Fetch all pages listed in the URL's file.
     pages <- getPages $ mapM getHTML (lines urls)
 
     -- Get timestamp.
     utcTime <- getCurrentTime
 
-    -- Send email with AWS SES.
-    let subText = pack $ "Availability " ++ generateTime utcTime
+    -- Generate email subject.
+    let subText = pack $ "Availability " ++ formatTimeStamp utcTime
 
+    -- Generate email HTML body.
+    let bodyText = toStrict $ decodeUtf8 $ formatOutput pages
+
+    -- Generate full report email.
+    let email = makeEmail subText bodyText
+
+    -- Generate AWS environment and insantiate logger.
     env <- newEnv Ireland Discover
     logger <- newLogger Debug stdout
-    _ <- runResourceT . runAWS (env & envLogger .~ logger) $
-        send $ generateEmail subText $ toStrict $ decodeUtf8 $ formatOutput pages
+
+    -- Send report email.
+    _ <- runResourceT . runAWS
+        (env & envLogger .~ logger)
+        $ send email
+
     return ()
 
 
-generateTime :: UTCTime -> String
-generateTime utcTime = formatTime defaultTimeLocale format cestTime
+-- | Generate a string containing a local timestamp in a human readable format.
+formatTimeStamp :: UTCTime -> String
+formatTimeStamp utcTime = formatTime defaultTimeLocale format cestTime
   where
     cestTime = utcToLocalTime cest utcTime
     cest = TimeZone 120 True "CEST"
-    format ="%a %d/%m/%Y %R"
+    format = "%a %d/%m/%Y %R"
 
 -- ------------------------------------------------------------------------- --
 --              AWS SES SERVICE
 -- ------------------------------------------------------------------------- --
 
-recipients = ["stoxx84@gmail.com", "simone.trubian@ondait.com"]
 
-
-generateEmail subText payload = sendEmail "stoxx84@gmail.com" dest msg
+-- | Generate a list of emails to be sent.
+makeEmail :: Text -> Text -> SendEmail
+makeEmail subText payload = sendEmail "stoxx84@gmail.com" dest msg
   where
     dest = destination & dToAddresses .~ recipients
     msg = message subject body'
     subject = SES.content "" & cData .~ subText
     body' = body & bHTML .~ Just (SES.content payload)
+
+
+recipients = ["stoxx84@gmail.com", "simone.trubian@ondait.com"]
