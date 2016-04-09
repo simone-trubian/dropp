@@ -79,7 +79,7 @@ formatOutput pages = renderHtml $ ul $ mapM_ formatBlock pages
 -- | Generate HTML list comprised of an item name, coming from the item page
 -- title and its colour-coded availability string.
 formatBlock :: ByteString -> Html
-formatBlock page = li $ (ul $ do
+formatBlock page = li $ ul (do
     li $ toHtml $ title block
     renderAvailability block)
     ! style "list-style-type:none; margin:10px 0"
@@ -98,7 +98,7 @@ formatBlock page = li $ (ul $ do
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
 renderAvailability :: ItemBlock -> Html
-renderAvailability block = (li $ toHtml $ content) ! style (color content)
+renderAvailability block = li (toHtml content) ! style (color content)
   where
     content = availability block
     color txt
@@ -116,7 +116,7 @@ renderAvailability block = (li $ toHtml $ content) ! style (color content)
 -- values and therefore marked blue.
 formatItemCount :: Text -> AttributeValue
 formatItemCount txt =
-  case (parse parser "" txt) of
+  case parse parser "" txt of
     Right str -> decideCount str
     Left _ -> "color:blue"
 
@@ -128,9 +128,7 @@ formatItemCount txt =
 
     decideCount str =
       -- Check if the number of items is > 5.
-      case ((read str) > 5) of
-        True -> "color:green"
-        False -> "color:orange"
+      if read str > 5 then "color:green" else "color:orange"
 
 
 -- | Generate an item block starting from a BangGood item page.
