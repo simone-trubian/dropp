@@ -7,6 +7,10 @@ sudo: required
 env:
  - CABALVER=1.22 GHCVER=7.10.2
 
+branches:
+  only:
+    - master
+
 # Note: the distinction between `before_install` and `install` is not important.
 before_install:
  - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
