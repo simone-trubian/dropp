@@ -5,12 +5,20 @@ license: BSD3
 license-file: LICENSE
 author: Simone Trubian
 maintainer: simone.trubian@ondait.com
+homepage:https://github.com/simone-trubian/dropp
+bug-reports: https://github.com/simone-trubian/dropp/issues
 copyright: Copyright: (c) 2016 Onda IT
 category: Web
+description: Drop shipping system.
 build-type: Simple
 cabal-version: >=1.10
 extra-doc-files: README.md
 tested-with: GHC==7.10.2
+
+source-repository head
+    type: git
+    location: https://github.com/simone-trubian/dropp.git
+    branch: master
 
 
 library

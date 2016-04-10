@@ -1,7 +1,9 @@
 # explicitly request legacy non-sudo based build environment
 sudo: required
 
-# The following enables several GHC versions to be tested; often it's enough to test only against the last release in a major GHC version. Feel free to omit lines listings versions you don't need/want testing for.
+# The following enables several GHC versions to be tested; often it's enough to
+# test only against the last release in a major GHC version. Feel free to omit
+# lines listings versions you don't need/want testing for.
 env:
  - CABALVER=1.22 GHCVER=7.10.2
 
@@ -18,18 +20,11 @@ install:
  - travis_retry cabal update
  - cabal install --only-dependencies --enable-tests
 
-# Here starts the actual work to be performed for the package under test; any command which exits with a non-zero exit code causes the build to fail.
+# Here starts the actual work to be performed for the package under test; any
+# command which exits with a non-zero exit code causes the build to fail.
 script:
  - if [ -f configure.ac ]; then autoreconf -i; fi
-  # -v2 provides useful information for debugging
  - cabal configure --enable-tests -v2
- - cabal build   # this builds all libraries and executables (including tests/benchmarks)
+ - cabal build
  - cabal test
-# - cabal check
-# - cabal sdist   # tests that a source-distribution can be generated
-
-# Check that the resulting source distribution can be built & installed.
-# If there are no other `.tar.gz` files in `dist`, this can be even simpler:
-# `cabal install --force-reinstalls dist/*-*.tar.gz`
-#- SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
-#  (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
+ - cabal check
