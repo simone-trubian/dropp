@@ -11,6 +11,7 @@ let
     amazonka
     amazonka-ses
     blaze-html
+    warp
 
     # Testing
     hlint

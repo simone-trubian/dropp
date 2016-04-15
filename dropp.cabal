@@ -64,6 +64,14 @@ executable dropp
     , lens >= 4.0
 
 
+executable localsvr
+  main-is: LocalSvr.hs
+  hs-source-dirs: localsrv
+
+  build-depends:
+      base >=4.8 && <4.9
+
+
 test-suite test
 
   default-language: Haskell2010
