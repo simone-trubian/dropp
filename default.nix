@@ -12,6 +12,7 @@ let
     amazonka-ses
     blaze-html
     warp
+    utf8-string
 
     # Testing
     hlint

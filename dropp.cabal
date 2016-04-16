@@ -64,12 +64,21 @@ executable dropp
     , lens >= 4.0
 
 
-executable localsvr
-  main-is: LocalSvr.hs
+executable localsrv
+  main-is: LocalSrv.hs
   hs-source-dirs: localsrv
+  default-language: Haskell2010
+
+  default-extensions:
+      OverloadedStrings
 
   build-depends:
       base >=4.8 && <4.9
+    , wai >= 3.0
+    , warp >= 3.1
+    , http-types >= 0.8
+    , blaze-builder >= 0.4
+    , utf8-string >= 1.0
 
 
 test-suite test
