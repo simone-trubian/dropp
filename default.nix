@@ -11,8 +11,9 @@ let
     amazonka
     amazonka-ses
     blaze-html
-    warp
-    utf8-string
+    servant
+    # warp
+    # utf8-string
 
     # Testing
     hlint
