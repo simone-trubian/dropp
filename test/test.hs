@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 
-import HTML
+import Dropp.HTML
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Data.ByteString.Lazy.Char8 (pack)

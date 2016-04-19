@@ -2,7 +2,7 @@
 -- parsing and HTML generation. The module employs the
 -- <https://jaspervdj.be/blaze/ blaze> and
 -- <https://hackage.haskell.org/package/html-conduit html-conduit> libraries.
-module HTML
+module Dropp.HTML
   ( ItemBlock (ItemBlock)
   , formatOutput
   , formatBlock

@@ -11,7 +11,7 @@
 -- <https://github.com/facebook/Haxl Haxl library>. As of the current version
 -- implements only the concrete type 'GetHTML' which is used to fetch HTML
 -- pages.
-module HttpDataSource
+module Dropp.HttpDataSource
   ( HttpException
   , getHTML
   , getPages

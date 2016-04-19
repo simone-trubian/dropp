@@ -1,8 +1,8 @@
 module Main where
 
 
-import HttpDataSource
-import HTML
+import Dropp.HttpDataSource
+import Dropp.HTML
 import System.Environment (getArgs)
 import Data.Text (pack)
 import Data.Text.Internal (Text)
