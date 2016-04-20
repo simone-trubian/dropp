@@ -12,8 +12,7 @@ let
     amazonka-ses
     blaze-html
     servant
-    # warp
-    # utf8-string
+    servant-lucid
 
     # Testing
     hlint
