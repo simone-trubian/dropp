@@ -3,7 +3,7 @@
 -- <https://jaspervdj.be/blaze/ blaze> and
 -- <https://hackage.haskell.org/package/html-conduit html-conduit> libraries.
 module Dropp.HTML
-  ( ItemBlock (ItemBlock)
+  ( ItemBlock (..)
   , formatOutput
   , formatBlock
   , formatItemCount
