@@ -12,7 +12,10 @@ let
     amazonka-ses
     blaze-html
     servant
+    servant-server
     servant-lucid
+    wai
+    warp
 
     # Testing
     hlint

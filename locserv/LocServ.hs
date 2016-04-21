@@ -4,6 +4,9 @@ module Main where
 import Dropp.HTML
 import Lucid
 import Data.Text
+import Network.Wai
+import Network.Wai.Handler.Warp (run)
+import Servant
 import Servant.API
 import Servant.Server
 import Servant.HTML.Lucid
@@ -12,7 +15,11 @@ import Network.HTTP.Media
   , (/:))
 
 
-block1 = ItemBlock "hello" "goodbye"
+main :: IO ()
+main = run 8081 app
+
+
+block = ItemBlock "hello" "goodbye"
 
 
 blockAPI :: Proxy BlockAPI
@@ -20,14 +27,14 @@ blockAPI = Proxy
 
 
 server :: Server BlockAPI
-server = return block1
+server = return block
 
 
 app :: Application
 app = serve blockAPI server
 
 
-type BlockAPI = "block" :> Get [JSON, HTMLLucid] Block
+type BlockAPI = "block" :> Get '[HTMLLucid] ItemBlock
 
 
 data HTMLLucid
