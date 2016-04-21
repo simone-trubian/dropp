@@ -4,7 +4,10 @@ module Main where
 import Dropp.HTML (ItemBlock (..))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Proxy (Proxy))
+import Servant
+  ( Proxy (Proxy)
+  , ServantErr)
+
 import Lucid
   ( ToHtml
   , HtmlT
@@ -23,12 +26,14 @@ import Servant.API
   , Accept
   , Get
   , (:>)
+  , (:<|>)
   , contentType
   , mimeRender)
 
 import Servant.Server
   ( Server
-  , serve)
+  , serve
+  , err404)
 
 import Network.HTTP.Media
   ( (//)
@@ -44,6 +49,7 @@ data HTMLLucid
 
 
 type BlockAPI = "bangOK" :> Get '[HTMLLucid] ItemBlock
+           -- :<|> "bangWrong" :> Get err404
 
 
 -- ------------------------------------------------------------------------- --
