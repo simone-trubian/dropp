@@ -60,6 +60,7 @@ data ItemBlock = ItemBlock
     -- BangGood web page.
   , availability :: Text}
 
+
 instance Show ItemBlock where
     show (ItemBlock title availability) =
         show title ++ "\n" ++ show availability

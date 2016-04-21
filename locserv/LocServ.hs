@@ -1,25 +1,85 @@
 module Main where
 
 
-import Dropp.HTML
-import Lucid
-import Data.Text
-import Network.Wai
+import Dropp.HTML (ItemBlock (..))
+import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant
+import Servant (Proxy (Proxy))
+import Lucid
+  ( ToHtml
+  , HtmlT
+  , Html
+  , toHtml
+  , toHtmlRaw
+  , renderBS
+  , html_
+  , title_
+  , body_
+  , div_
+  , class_)
+
 import Servant.API
+  ( MimeRender
+  , Accept
+  , Get
+  , (:>)
+  , contentType
+  , mimeRender)
+
 import Servant.Server
-import Servant.HTML.Lucid
+  ( Server
+  , serve)
+
 import Network.HTTP.Media
   ( (//)
   , (/:))
 
 
+
+-- ------------------------------------------------------------------------- --
+--              API DEFINITION
+-- ------------------------------------------------------------------------- --
+
+data HTMLLucid
+
+
+type BlockAPI = "bangOK" :> Get '[HTMLLucid] ItemBlock
+
+
+-- ------------------------------------------------------------------------- --
+--              BOILERPLATE
+-- ------------------------------------------------------------------------- --
+
+instance ToHtml a => MimeRender HTMLLucid a where
+    mimeRender _ = renderBS . toHtml
+
+
+instance Accept HTMLLucid where
+    contentType _ = "text" // "html" /: ("charset", "utf-8")
+
+
+instance ToHtml ItemBlock where
+  toHtml block = bangGoodMockPage block
+
+  toHtmlRaw = toHtml
+
+
+bangGoodMockPage :: Monad m => ItemBlock -> HtmlT m ()
+bangGoodMockPage block =
+    html_ $ do
+      title_ (toHtml $ title block)
+      body_ (div_ [class_ "status"] (toHtml $ availability block))
+
+
+-- ------------------------------------------------------------------------- --
+--              BOILERPLATE
+-- ------------------------------------------------------------------------- --
+
 main :: IO ()
 main = run 8081 app
 
 
-block = ItemBlock "hello" "goodbye"
+block = ItemBlock "Title" "In stock, usually dispatched in 1 business day"
 
 
 blockAPI :: Proxy BlockAPI
@@ -32,33 +92,3 @@ server = return block
 
 app :: Application
 app = serve blockAPI server
-
-
-type BlockAPI = "block" :> Get '[HTMLLucid] ItemBlock
-
-
-data HTMLLucid
-
-
-instance ToHtml a => MimeRender HTMLLucid a where
-    mimeRender _ = renderBS . toHtml
-
-
--- let's also provide an instance for lucid's
--- 'Html' wrapper.
-instance MimeRender HTMLLucid (Html a) where
-    mimeRender _ = renderBS
-
-
-instance Accept HTMLLucid where
-    contentType _ = "text" // "html" /: ("charset", "utf-8")
-
-
-instance ToHtml ItemBlock where
-  toHtml block =
-    tr_ $ do
-      td_ (toHtml $ title block)
-      td_ (toHtml $ availability block)
-
-
-  toHtmlRaw = toHtml
