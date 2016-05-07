@@ -1,0 +1,123 @@
+name: dropp-client
+version: 0.3.3.2
+synopsis: Drop shipping system.
+license: BSD3
+license-file: LICENSE
+author: Simone Trubian
+maintainer: simone.trubian@ondait.com
+homepage:https://github.com/simone-trubian/dropp
+bug-reports: https://github.com/simone-trubian/dropp/issues
+copyright: Copyright: (c) 2016 Onda IT
+category: Web
+description: Drop shipping system.
+build-type: Simple
+cabal-version: >=1.10
+extra-doc-files: README.md
+tested-with: GHC==7.10.2
+
+source-repository head
+    type: git
+    location: https://github.com/simone-trubian/dropp.git
+    branch: master
+
+flag dev
+    description: build in dev mode
+    default: True
+    manual: True
+
+
+library
+  default-language: Haskell2010
+  hs-source-dirs: src
+  if flag(dev)
+     ghc-options: -Werror
+
+  default-extensions:
+      OverloadedStrings
+
+  build-depends:
+      base >=4.8 && <4.9
+    , haxl >= 0.3.1.0 && <= 0.3.1.0 
+    , hashable >= 1.2.4.0 && <= 1.2.4.0
+    , bytestring >= 0.10.6.0 && <= 0.10.6.0
+    , http-conduit >= 2.1.8 && <= 2.1.8
+    , html-conduit >= 1.2.1 && <= 1.2.1
+    , xml-conduit >= 1.3.4 && <= 1.3.4
+    , async >= 2.1.0 && <= 2.1.0
+    , text >= 1.2.2.1 && <= 1.2.2.1
+    , blaze-html >= 0.8.1.1 && <= 0.8.1.1
+    , blaze-markup >= 0.7.0.3 && <= 0.7.0.3
+    , parsec >= 3.1.9 && <= 3.1.9
+
+  exposed-modules:
+    Dropp.HttpDataSource
+    Dropp.HTML
+
+
+executable dropp-client
+  main-is: src/Main.hs
+  default-language: Haskell2010
+  if flag(dev)
+     ghc-options: -Werror
+
+  default-extensions:
+      OverloadedStrings
+
+  build-depends:
+      base >=4.8 && <4.9
+    , dropp-client
+    , text >= 1.2.2.1 && <= 1.2.2.1
+    , time >= 1.5.0.1 && <= 1.5.0.1
+    , amazonka >= 1.4.0 && <= 1.4.0
+    , amazonka-ses >= 1.4.0 && <= 1.4.0
+    , lens >= 4.13 && <= 4.13
+
+
+executable locserv
+  main-is: locserv/LocServ.hs
+  default-language: Haskell2010
+  if flag(dev)
+     ghc-options: -Werror
+
+  default-extensions:
+      OverloadedStrings
+      DataKinds
+      TypeOperators
+      FlexibleInstances
+      MultiParamTypeClasses
+
+-- TODO: Please ckeck what is the version used in nix.
+  build-depends:
+      base >=4.8 && <4.9
+    , dropp-client
+    , servant >= 0.4.4.7 && <= 0.4.4.7
+    , servant-server >= 0.4.4.7 && <= 0.4.4.7
+    , servant-lucid >= 0.5 && <= 0.5
+    , lucid >= 2.9.5 && <= 2.9.5
+    , text >= 1.2.2.1 && <= 1.2.2.1
+    , http-media >= 0.6.3 && <= 0.6.3
+    , wai >= 3.2.0 && <= 3.2.0
+    , warp >= 3.2.3 && <= 3.2.3
+
+
+test-suite test
+
+  default-language: Haskell2010
+  main-is: test.hs
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  if flag(dev)
+     ghc-options: -Werror
+
+  default-extensions:
+      OverloadedStrings
+
+  build-depends:
+      base >=4.8 && <4.9
+    , text >= 1.2.2.1 && <= 1.2.2.1
+    , tasty >= 0.11.0.2 && <= 0.11.0.2
+    , bytestring >= 0.10.6.0 && <= 0.10.6.0
+    , tasty-hunit >= 0.9.2 && <= 0.9.2
+    , blaze-html >= 0.8.1.1 && <= 0.8.1.1
+    , blaze-markup >= 0.7.0.3 && <= 0.7.0.3
+    , dropp-client
