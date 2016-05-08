@@ -9,6 +9,7 @@ import Data.Text.Internal (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
+import Control.Applicative ((<$>))
 import Data.Time.Clock
   ( UTCTime
   , getCurrentTime)
@@ -58,10 +59,10 @@ main = do
     args <- getArgs
     let [urlFile] = args
 
-    urls <- readFile urlFile
+    urls <- map (\x -> HtmlUrl x) . lines <$> readFile urlFile :: IO [URL]
 
     -- Fetch all pages listed in the URL's file.
-    pages <- getPages $ mapM getHTML (lines urls)
+    pages <- getPages $ mapM getHTML urls
 
     -- Get timestamp.
     utcTime <- getCurrentTime

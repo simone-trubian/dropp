@@ -2,9 +2,12 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 
 -- |This module implements HTTP requests using the
@@ -13,6 +16,7 @@
 -- pages.
 module Dropp.HttpDataSource
   ( HttpException
+  , URL (..)
   , getHTML
   , getPages
   , initDataSource)
@@ -22,13 +26,15 @@ module Dropp.HttpDataSource
 import Data.Typeable
 import Control.Monad (void)
 import Text.Printf (printf)
-import Control.Concurrent.Async (mapConcurrently)
 import Control.Concurrent (threadDelay)
 import Data.ByteString.Lazy (ByteString)
+import Data.Aeson.Types (Object)
+import GHC.Generics (Generic)
 
 import Data.Hashable
   ( Hashable
-  , hashWithSalt)
+  , hashWithSalt
+  , hash)
 
 import Haxl.Core
   ( StateKey
@@ -77,7 +83,15 @@ type Haxl a = GenHaxl () a
 -- ------------------------------------------------------------------------- --
 
 -- |URL literal.
-type URL = String
+data URL =
+    HtmlUrl String
+  | JsonUrl String
+
+  deriving (Show, Ord, Eq, Generic)
+
+instance Hashable URL where
+    hash (HtmlUrl url) = hash $ show url
+    hash (JsonUrl url) = hash $ show url
 
 
 -- |Haxl GADT
@@ -86,6 +100,10 @@ data HttpReq a where
     GetHTML
         :: URL --  URL literal to be fetched.
         -> HttpReq ByteString --  HTML bytestring boxed in a Haxl fetch.
+
+    GetJSON
+        :: URL --  URL literal to be fetched.
+        -> HttpReq Object --  Aeson JSON boxed in a Haxl fetch.
 
 deriving instance Show (HttpReq a)
 
@@ -96,10 +114,14 @@ instance Show1 HttpReq where show1 = show
 deriving instance Eq (HttpReq a)
 
 instance Hashable (HttpReq a) where
-    hashWithSalt salt (GetHTML url) = hashWithSalt salt (0 :: Int, url)
+    hashWithSalt salt (GetHTML (url :: URL)) =
+        hashWithSalt salt (0 :: Int, url :: URL)
+
+    hashWithSalt salt (GetJSON (url :: URL)) =
+        hashWithSalt salt (1 :: Int, url :: URL)
 
 instance DataSourceName HttpReq where
-    dataSourceName _ = "HttpGoodDataSource"
+    dataSourceName _ = "HttpDataSource"
 
 instance StateKey HttpReq where
     data State HttpReq = HttpState Manager
@@ -114,13 +136,9 @@ initDataSource :: IO (State HttpReq)
 initDataSource = HttpState <$> newManager tlsManagerSettings
 
 
--- Why `void`?
--- `void $ mapM ..` equals to `mapM_` that is it discards the results of an IO
--- action. The reason why it is used here is that there is no version of
--- `mapConcurrently` that does that.
 instance DataSource u HttpReq where
   fetch (HttpState mgr) _flags _userEnv blockedFetches =
-    SyncFetch $ void $ mapConcurrently (fetchURL mgr) blockedFetches
+    SyncFetch $ mapM_ (fetchURL mgr) blockedFetches
 
 
 -- |Perform HTTP requests of HTML URL's. All requests are intended to be GET
@@ -131,10 +149,10 @@ fetchURL
     -> IO ()
 
 fetchURL mgr (BlockedFetch (GetHTML url) var) = do
-    printf "Fetching url.\n" -- FIXME: move to fetch method, log instead of print.
+    printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
     threadDelay 1000000
     e <- try $ do
-        req <- parseUrl url
+        req <- parseUrl $ show url
         responseBody <$> httpLbs req mgr
 
     either (putFailure var) (putSuccess var)
