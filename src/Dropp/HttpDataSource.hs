@@ -28,8 +28,11 @@ import Control.Monad (void)
 import Text.Printf (printf)
 import Control.Concurrent (threadDelay)
 import Data.ByteString.Lazy (ByteString)
-import Data.Aeson.Types (Object)
 import GHC.Generics (Generic)
+import Data.Aeson (
+    FromJSON
+  , ToJSON
+  , decode)
 
 import Data.Hashable
   ( Hashable
@@ -77,15 +80,10 @@ import Network.HTTP.Conduit
 -- |Convenience alias for a GenHaxl with no user crentials.
 type Haxl a = GenHaxl () a
 
-
--- ------------------------------------------------------------------------- --
---              BOILERPLATE
--- ------------------------------------------------------------------------- --
-
 -- |URL literal.
 data URL =
-    HtmlUrl String
-  | JsonUrl String
+    HtmlUrl String --  Url pointing to an html page.
+  | JsonUrl String --  Url pointing to a JSON endpoint.
 
   deriving (Show, Ord, Eq, Generic)
 
@@ -93,6 +91,21 @@ instance Hashable URL where
     hash (HtmlUrl url) = hash $ show url
     hash (JsonUrl url) = hash $ show url
 
+-- deriving instance Typeable URL
+
+
+-- |Json object returned by the /urls endpoint.
+data Urls = Url {url :: String}
+
+  deriving (Show, Generic)
+
+instance FromJSON Urls
+instance ToJSON Urls
+
+
+-- ------------------------------------------------------------------------- --
+--              BOILERPLATE
+-- ------------------------------------------------------------------------- --
 
 -- |Haxl GADT
 data HttpReq a where
@@ -103,7 +116,7 @@ data HttpReq a where
 
     GetJSON
         :: URL --  URL literal to be fetched.
-        -> HttpReq Object --  Aeson JSON boxed in a Haxl fetch.
+           -> HttpReq (Maybe Urls) --  Aeson JSON boxed in a Haxl fetch.
 
 deriving instance Show (HttpReq a)
 
@@ -138,7 +151,7 @@ initDataSource = HttpState <$> newManager tlsManagerSettings
 
 instance DataSource u HttpReq where
   fetch (HttpState mgr) _flags _userEnv blockedFetches =
-    SyncFetch $ mapM_ (fetchURL mgr) blockedFetches
+      SyncFetch $ mapM_ (fetchURL mgr) blockedFetches
 
 
 -- |Perform HTTP requests of HTML URL's. All requests are intended to be GET
@@ -148,15 +161,27 @@ fetchURL
     -> BlockedFetch HttpReq -- ^ Accepts any concrete type of the HttpReq GADT.
     -> IO ()
 
-fetchURL mgr (BlockedFetch (GetHTML url) var) = do
+fetchURL mgr (BlockedFetch (GetHTML (HtmlUrl url)) var) = do
     printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
     threadDelay 1000000
-    e <- try $ do
+    fetchedHtml <- try $ do
         req <- parseUrl $ show url
         responseBody <$> httpLbs req mgr
 
     either (putFailure var) (putSuccess var)
-        (e :: Either SomeException ByteString)
+        (fetchedHtml :: Either SomeException ByteString)
+
+
+fetchURL mgr (BlockedFetch (GetJSON (JsonUrl url)) var) = do
+    printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
+    threadDelay 1000000
+    fetchedJson <- try $ do
+        req <- parseUrl $ show url
+        body <- responseBody <$> httpLbs req mgr
+        return (decode body)
+
+    either (putFailure var) (putSuccess var)
+        (fetchedJson :: Either SomeException (Maybe Urls))
 
 
 -- ------------------------------------------------------------------------- --
