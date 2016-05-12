@@ -4,6 +4,7 @@ module Main where
 import Dropp.HTML (ItemBlock (..))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
+import Data.Text.Internal (Text)
 import Servant
   ( Proxy (Proxy)
   , ServantErr)
@@ -25,6 +26,7 @@ import Servant.API
   ( MimeRender
   , Accept
   , Get
+  , Capture
   , (:>)
   , (:<|>)
   , contentType
@@ -48,8 +50,7 @@ import Network.HTTP.Media
 data HTMLLucid
 
 
-type BlockAPI = "bangOK" :> Get '[HTMLLucid] ItemBlock
-           -- :<|> "bangWrong" :> Get err404
+type BlockAPI = "bangOK" :> Capture "title" Text :> Get '[HTMLLucid] ItemBlock
 
 
 -- ------------------------------------------------------------------------- --
@@ -85,15 +86,13 @@ main :: IO ()
 main = run 8081 app
 
 
-block = ItemBlock "Title" "In stock, usually dispatched in 1 business day"
-
-
 blockAPI :: Proxy BlockAPI
 blockAPI = Proxy
 
 
-server :: Server BlockAPI
-server = return block
+server :: Monad m => Text -> m ItemBlock
+server title =
+    return $ ItemBlock title "In stock, usually dispatched in 1 business day"
 
 
 app :: Application
