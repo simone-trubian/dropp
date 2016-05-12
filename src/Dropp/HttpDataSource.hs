@@ -18,6 +18,7 @@ module Dropp.HttpDataSource
   ( HttpException
   , URL (..)
   , getHTML
+  , getJSON
   , getPages
   , initDataSource)
   where
@@ -116,7 +117,7 @@ data HttpReq a where
 
     GetJSON
         :: URL --  URL literal to be fetched.
-           -> HttpReq (Maybe Urls) --  Aeson JSON boxed in a Haxl fetch.
+           -> HttpReq (Maybe [Urls]) --  Aeson JSON boxed in a Haxl fetch.
 
 deriving instance Show (HttpReq a)
 
@@ -165,7 +166,7 @@ fetchURL mgr (BlockedFetch (GetHTML (HtmlUrl url)) var) = do
     printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
     threadDelay 1000000
     fetchedHtml <- try $ do
-        req <- parseUrl $ show url
+        req <- parseUrl $ url
         responseBody <$> httpLbs req mgr
 
     either (putFailure var) (putSuccess var)
@@ -176,12 +177,12 @@ fetchURL mgr (BlockedFetch (GetJSON (JsonUrl url)) var) = do
     printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
     threadDelay 1000000
     fetchedJson <- try $ do
-        req <- parseUrl $ show url
+        req <- parseUrl $ url
         body <- responseBody <$> httpLbs req mgr
         return (decode body)
 
     either (putFailure var) (putSuccess var)
-        (fetchedJson :: Either SomeException (Maybe Urls))
+        (fetchedJson :: Either SomeException (Maybe [Urls]))
 
 
 -- ------------------------------------------------------------------------- --
@@ -194,6 +195,13 @@ getHTML
     -> GenHaxl u ByteString -- ^ Haxl fetch.
 
 getHTML = dataFetch . GetHTML
+
+
+getJSON
+    :: URL -- ^ HTML url to be fetched.
+    -> GenHaxl u (Maybe [Urls]) -- ^ Haxl fetch.
+
+getJSON = dataFetch . GetJSON
 
 
 -- |Perform the Haxl data fetching.
