@@ -17,6 +17,7 @@
 module Dropp.HttpDataSource
   ( HttpException
   , URL (..)
+  , Urls (..)
   , getHTML
   , getJSON
   , getPages

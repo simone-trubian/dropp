@@ -4,6 +4,7 @@ module Main where
 import Dropp.HttpDataSource
 import Dropp.HTML
 import System.Environment (getArgs)
+import Data.Maybe (fromJust)
 import Data.Text (pack)
 import Data.Text.Internal (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
@@ -55,13 +56,13 @@ import Control.Lens
 
 main :: IO ()
 main = do
-    -- Read and parse all input files.
-    args <- getArgs
-    let [urlFile] = args
 
-    urls <- map (\x -> HtmlUrl x) . lines <$> readFile urlFile :: IO [URL]
+    -- Fetch pages urls from DB.
+    [dbUrls] <- getPages $ mapM getJSON [(JsonUrl "http://localhost:3000/urls")]
 
-    -- Fetch all pages listed in the URL's file.
+    let urls = map (HtmlUrl . url) $ fromJust dbUrls
+
+    -- Fetch all pages listed in the DB table.
     pages <- getPages $ mapM getHTML urls
 
     -- Get timestamp.
