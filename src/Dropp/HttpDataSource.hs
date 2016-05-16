@@ -7,7 +7,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 
 -- |This module implements HTTP requests using the
@@ -26,20 +25,16 @@ module Dropp.HttpDataSource
 
 
 import Data.Typeable
+import Dropp.DataTypes
 import Control.Monad (void)
 import Text.Printf (printf)
 import Control.Concurrent (threadDelay)
 import Data.ByteString.Lazy (ByteString)
-import GHC.Generics (Generic)
-import Data.Aeson (
-    FromJSON
-  , ToJSON
-  , decode)
+import Data.Aeson (decode)
 
 import Data.Hashable
   ( Hashable
-  , hashWithSalt
-  , hash)
+  , hashWithSalt)
 
 import Haxl.Core
   ( StateKey
@@ -73,36 +68,6 @@ import Network.HTTP.Conduit
   , parseUrl
   , responseBody
   , httpLbs)
-
-
--- ------------------------------------------------------------------------- --
---              TYPES
--- ------------------------------------------------------------------------- --
-
--- |Convenience alias for a GenHaxl with no user crentials.
-type Haxl a = GenHaxl () a
-
--- |URL literal.
-data URL =
-    HtmlUrl String --  Url pointing to an html page.
-  | JsonUrl String --  Url pointing to a JSON endpoint.
-
-  deriving (Show, Ord, Eq, Generic)
-
-instance Hashable URL where
-    hash (HtmlUrl url) = hash $ show url
-    hash (JsonUrl url) = hash $ show url
-
--- deriving instance Typeable URL
-
-
--- |Json object returned by the /urls endpoint.
-data Urls = Url {url :: String}
-
-  deriving (Show, Generic)
-
-instance FromJSON Urls
-instance ToJSON Urls
 
 
 -- ------------------------------------------------------------------------- --

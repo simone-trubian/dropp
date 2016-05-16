@@ -3,6 +3,7 @@ module Main where
 
 import Dropp.HttpDataSource
 import Dropp.HTML
+import Dropp.DataTypes
 import System.Environment (getArgs)
 import Data.Maybe (fromJust)
 import Data.Text (pack)

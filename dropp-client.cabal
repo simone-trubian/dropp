@@ -1,5 +1,5 @@
 name: dropp-client
-version: 0.4
+version: 0.4.0.1
 synopsis: Drop shipping system.
 license: BSD3
 license-file: LICENSE
@@ -53,6 +53,7 @@ library
   exposed-modules:
     Dropp.HttpDataSource
     Dropp.HTML
+    Dropp.DataTypes
 
 
 executable dropp-client

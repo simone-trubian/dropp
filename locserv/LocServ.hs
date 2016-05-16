@@ -1,7 +1,7 @@
 module Main where
 
 
-import Dropp.HTML (ItemBlock (..))
+import Dropp.DataTypes (ItemBlock (..))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Data.Text.Internal (Text)
