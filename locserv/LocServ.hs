@@ -1,10 +1,11 @@
 module Main where
 
 
-import Dropp.DataTypes (ItemBlock (..))
+import Dropp.DataTypes
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Data.Text.Internal (Text)
+import Control.Monad.Trans.Either (EitherT)
 import Servant
   ( Proxy (Proxy)
   , ServantErr)
@@ -23,19 +24,19 @@ import Lucid
   , class_)
 
 import Servant.API
-  ( MimeRender
-  , Accept
-  , Get
-  , Capture
-  , (:>)
-  , (:<|>)
-  , contentType
-  , mimeRender)
+  --( MimeRender
+  --, Accept
+  --, Get
+  --, Capture
+  --, JSON
+  --, (:>)
+  --, (:<|>)
+  --, contentType
+  --, mimeRender)
 
 import Servant.Server
   ( Server
-  , serve
-  , err404)
+  , serve)
 
 import Network.HTTP.Media
   ( (//)
@@ -50,8 +51,8 @@ import Network.HTTP.Media
 data HTMLLucid
 
 
-type BlockAPI = "bangOK" :> Capture "title" Text :> Get '[HTMLLucid] ItemBlock
-
+type TestAPI = "bangOK" :> Capture "title" Text :> Get '[HTMLLucid] ItemBlock
+           :<|> "bangJSON" :> Capture "count" Int :> Get '[JSON] JsonAv
 
 -- ------------------------------------------------------------------------- --
 --              BOILERPLATE
@@ -86,13 +87,21 @@ main :: IO ()
 main = run 8081 app
 
 
-blockAPI :: Proxy BlockAPI
+blockAPI :: Proxy TestAPI
 blockAPI = Proxy
 
 
-server :: Monad m => Text -> m ItemBlock
-server title =
-    return $ ItemBlock title "In stock, usually dispatched in 1 business day"
+-- server :: Monad m => Text -> m ItemBlock
+server :: Server TestAPI
+server = bangOK :<|> bangJSON
+
+  where
+    bangOK :: Text -> EitherT ServantErr IO ItemBlock
+    bangOK title =
+        return (ItemBlock title "In stock, usually dispatched in 1 business day")
+
+    bangJSON :: Int -> EitherT ServantErr IO JsonAv
+    bangJSON availability = return (JsonAv availability)
 
 
 app :: Application

@@ -55,3 +55,12 @@ data ItemBlock = ItemBlock
 instance Show ItemBlock where
     show (ItemBlock title availability) =
         show title ++ "\n" ++ show availability
+
+
+-- |Provisional data structure as captured from the JSON object of variable items.
+data JsonAv = JsonAv {itemCount :: Int}
+
+  deriving (Show, Generic)
+
+instance FromJSON JsonAv
+instance ToJSON JsonAv
