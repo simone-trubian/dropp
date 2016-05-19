@@ -18,7 +18,7 @@ module Dropp.HttpDataSource
   , URL (..)
   , Urls (..)
   , getHTML
-  , getJSON
+  , getUrls
   , getPages
   , initDataSource)
   where
@@ -82,7 +82,7 @@ data HttpReq a where
         :: URL --  URL literal to be fetched.
         -> HttpReq ByteString --  HTML bytestring boxed in a Haxl fetch.
 
-    GetJSON
+    GetUrls
         :: URL --  URL literal to be fetched.
            -> HttpReq (Maybe [Urls]) --  Aeson JSON boxed in a Haxl fetch.
 
@@ -98,7 +98,7 @@ instance Hashable (HttpReq a) where
     hashWithSalt salt (GetHTML (url :: URL)) =
         hashWithSalt salt (0 :: Int, url :: URL)
 
-    hashWithSalt salt (GetJSON (url :: URL)) =
+    hashWithSalt salt (GetUrls (url :: URL)) =
         hashWithSalt salt (1 :: Int, url :: URL)
 
 instance DataSourceName HttpReq where
@@ -129,20 +129,13 @@ fetchURL
     -> BlockedFetch HttpReq -- ^ Accepts any concrete type of the HttpReq GADT.
     -> IO ()
 
-fetchURL mgr (BlockedFetch (GetHTML (HtmlUrl url)) var) = do
-    fetchedHtml <- fetchHttp mgr url
-
-    either (putFailure var) (putSuccess var)
-        (fetchedHtml :: Either SomeException ByteString)
+fetchURL mgr (BlockedFetch (GetHTML (HtmlUrl url)) var) =
+    fetchHttp mgr url >>= either (putFailure var) (putSuccess var)
 
 
-fetchURL mgr (BlockedFetch (GetJSON (JsonUrl url)) var) = do
-    fetchedHtml <- fetchHttp mgr url
-
-    let fetchedJson = decode <$> fetchedHtml
-
-    either (putFailure var) (putSuccess var)
-        (fetchedJson :: Either SomeException (Maybe [Urls]))
+fetchURL mgr (BlockedFetch (GetUrls (JsonUrl url)) var) =
+    fetchHttp mgr url >>= \bytes -> either (putFailure var) (putSuccess var)
+        (decode <$> bytes)
 
 
 fetchHttp
@@ -171,11 +164,11 @@ getHTML
 getHTML = dataFetch . GetHTML
 
 
-getJSON
+getUrls
     :: URL -- ^ HTML url to be fetched.
     -> GenHaxl u (Maybe [Urls]) -- ^ Haxl fetch.
 
-getJSON = dataFetch . GetJSON
+getUrls = dataFetch . GetUrls
 
 
 -- |Perform the Haxl data fetching.

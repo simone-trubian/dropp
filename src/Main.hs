@@ -59,7 +59,7 @@ main :: IO ()
 main = do
 
     -- Fetch pages urls from DB.
-    [dbUrls] <- getPages $ mapM getJSON [(JsonUrl "http://localhost:3000/urls")]
+    [dbUrls] <- getPages $ mapM getUrls [(JsonUrl "http://localhost:3000/urls")]
 
     let urls = map (HtmlUrl . url) $ fromJust dbUrls
 
