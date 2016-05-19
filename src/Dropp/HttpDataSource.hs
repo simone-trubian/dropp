@@ -26,6 +26,7 @@ module Dropp.HttpDataSource
 
 import Data.Typeable
 import Dropp.DataTypes
+import GHC.Exception (Exception)
 import Control.Monad (void)
 import Text.Printf (printf)
 import Control.Concurrent (threadDelay)
@@ -129,26 +130,33 @@ fetchURL
     -> IO ()
 
 fetchURL mgr (BlockedFetch (GetHTML (HtmlUrl url)) var) = do
-    printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
-    threadDelay 1000000
-    fetchedHtml <- try $ do
-        req <- parseUrl $ url
-        responseBody <$> httpLbs req mgr
+    fetchedHtml <- fetchHttp mgr url
 
     either (putFailure var) (putSuccess var)
         (fetchedHtml :: Either SomeException ByteString)
 
 
 fetchURL mgr (BlockedFetch (GetJSON (JsonUrl url)) var) = do
-    printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
-    threadDelay 1000000
-    fetchedJson <- try $ do
-        req <- parseUrl $ url
-        body <- responseBody <$> httpLbs req mgr
-        return (decode body)
+    fetchedHtml <- fetchHttp mgr url
+
+    let fetchedJson = decode <$> fetchedHtml
 
     either (putFailure var) (putSuccess var)
         (fetchedJson :: Either SomeException (Maybe [Urls]))
+
+
+fetchHttp
+    :: Manager -- ^ Initalised Conduit manager.
+    -> String -- ^ Url to be fetched
+    -> IO (Either SomeException ByteString)
+fetchHttp mgr url = do
+    printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
+    threadDelay 1000000
+    fetchedHtml <- try $ do
+        req <- parseUrl $ url
+        responseBody <$> httpLbs req mgr
+
+    return fetchedHtml
 
 
 -- ------------------------------------------------------------------------- --
