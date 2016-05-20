@@ -31,7 +31,9 @@ import Control.Monad (void)
 import Text.Printf (printf)
 import Control.Concurrent (threadDelay)
 import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy.Char8 (pack)
 import Data.Aeson (decode)
+
 
 import Data.Hashable
   ( Hashable
@@ -55,6 +57,7 @@ import Haxl.Core
   , dataFetch
   , putFailure
   , putSuccess
+  , catch
   , fetch)
 
 import Control.Exception
@@ -161,14 +164,24 @@ getHTML
     :: URL -- ^ HTML url to be fetched.
     -> GenHaxl u ByteString -- ^ Haxl fetch.
 
-getHTML = dataFetch . GetHTML
+getHTML url = catch (dataFetch $ GetHTML url) dummyPage
+  where
+    dummyPage :: SomeException -> GenHaxl u ByteString
+    dummyPage _ =
+        return $ pack $
+            "<!DOCTYPE html><html><title>"
+            ++ (urlToStr url)
+            ++"</title></head><body><div class=\"status\">Currently out of stock</div></body>"
 
 
 getUrls
     :: URL -- ^ HTML url to be fetched.
     -> GenHaxl u (Maybe [Urls]) -- ^ Haxl fetch.
 
-getUrls = dataFetch . GetUrls
+getUrls url = catch (dataFetch $ GetUrls url) noList
+  where
+    noList :: SomeException -> GenHaxl u (Maybe [Urls])
+    noList _ = return Nothing
 
 
 -- |Perform the Haxl data fetching.

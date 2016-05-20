@@ -91,7 +91,6 @@ blockAPI :: Proxy TestAPI
 blockAPI = Proxy
 
 
--- server :: Monad m => Text -> m ItemBlock
 server :: Server TestAPI
 server = bangOK :<|> bangJSON
 

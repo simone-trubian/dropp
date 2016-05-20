@@ -32,6 +32,12 @@ instance Hashable URL where
     hash (JsonUrl url) = hash $ show url
 
 
+-- |Unbox the payload in the URL type and convert it to Byte String.
+urlToStr :: URL -> String
+urlToStr (HtmlUrl url) = url
+urlToStr (JsonUrl url) = url
+
+
 -- |Json object returned by the /urls endpoint.
 data Urls = Url {url :: String}
 
