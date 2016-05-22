@@ -74,6 +74,8 @@ executable dropp-client
     , amazonka >= 1.4.0 && <= 1.4.0
     , amazonka-ses >= 1.4.0 && <= 1.4.0
     , lens >= 4.13 && <= 4.13
+    , yaml >= 0.8.16 && <= 0.8.16
+    , bytestring >= 0.10.6.0 && <= 0.10.6.0
 
 
 executable locserv

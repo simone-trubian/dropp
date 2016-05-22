@@ -22,6 +22,7 @@ let
     servant-lucid
     wai
     warp
+    yaml
 
     # Testing
     hlint

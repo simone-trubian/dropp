@@ -4,6 +4,8 @@ module Main where
 import Dropp.HttpDataSource
 import Dropp.HTML
 import Dropp.DataTypes
+import qualified Data.ByteString as By
+import Data.Yaml (decode)
 import System.Environment (getArgs)
 import Data.Maybe (fromJust)
 import Data.Text (pack)
@@ -58,8 +60,12 @@ import Control.Lens
 main :: IO ()
 main = do
 
+    -- Read configuration file.
+    vars <- decode <$> By.readFile "./settings/settings.yaml" :: IO (Maybe Env)
+    let envVars = fromJust vars
+
     -- Fetch pages urls from DB.
-    [dbUrls] <- getPages $ mapM getUrls [(JsonUrl "http://localhost:3000/urls")]
+    [dbUrls] <- getPages $ mapM getUrls [(JsonUrl (dbUrls envVars))]
 
     let urls = map (HtmlUrl . url) $ fromJust dbUrls
 
@@ -76,7 +82,7 @@ main = do
     let bodyText = toStrict $ decodeUtf8 $ formatOutput pages
 
     -- Generate full report email.
-    let email = makeEmail subText bodyText
+    let email = makeEmail envVars subText bodyText
 
     -- Generate AWS environment and insantiate logger.
     env <- newEnv Ireland Discover
@@ -104,13 +110,10 @@ formatTimeStamp utcTime = formatTime defaultTimeLocale format cestTime
 
 
 -- | Generate a list of emails to be sent.
-makeEmail :: Text -> Text -> SendEmail
-makeEmail subText payload = sendEmail "stoxx84@gmail.com" dest msg
+makeEmail :: Env -> Text -> Text -> SendEmail
+makeEmail envVars subText payload = sendEmail (sender envVars) dest msg
   where
-    dest = destination & dToAddresses .~ recipients
+    dest = destination & dToAddresses .~ (recipients envVars)
     msg = message subject body'
     subject = SES.content "" & cData .~ subText
     body' = body & bHTML .~ Just (SES.content payload)
-
-
-recipients = ["stoxx84@gmail.com", "simone.trubian@ondait.com"]

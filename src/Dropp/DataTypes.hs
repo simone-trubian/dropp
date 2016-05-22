@@ -70,3 +70,15 @@ data JsonAv = JsonAv {itemCount :: Int}
 
 instance FromJSON JsonAv
 instance ToJSON JsonAv
+
+
+-- |Environment variables data type.
+data Env = Env
+  { recipients :: [Text]
+  , sender :: Text
+  , dbUrls :: String }
+
+  deriving (Show, Generic)
+
+instance FromJSON Env
+instance ToJSON Env
