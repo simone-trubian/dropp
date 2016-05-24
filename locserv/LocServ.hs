@@ -46,7 +46,7 @@ instance Accept HTMLLucid where
 
 
 instance L.ToHtml ItemBlock where
-  toHtml block = bangGoodMockPage block
+  toHtml = bangGoodMockPage
 
   toHtmlRaw = L.toHtml
 

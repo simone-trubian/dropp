@@ -149,11 +149,9 @@ fetchHttp
 fetchHttp mgr url = do
     printf $ "Fetching " ++ show url ++ "\n" -- FIXME: log instead of print.
     threadDelay 1000000
-    fetchedHtml <- try $ do
-        req <- parseUrl $ url
+    try $ do
+        req <- parseUrl url
         responseBody <$> httpLbs req mgr
-
-    return fetchedHtml
 
 
 -- ------------------------------------------------------------------------- --

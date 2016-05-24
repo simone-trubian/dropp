@@ -65,7 +65,7 @@ main = do
     let envVars = fromJust vars
 
     -- Fetch pages urls from DB.
-    [dbUrls] <- getPages $ mapM getUrls [(JsonUrl (dbUrls envVars))]
+    [dbUrls] <- getPages $ mapM getUrls [JsonUrl (dbUrls envVars)]
 
     let urls = map (HtmlUrl . url) $ fromJust dbUrls
 
@@ -113,7 +113,7 @@ formatTimeStamp utcTime = formatTime defaultTimeLocale format cestTime
 makeEmail :: Env -> Text -> Text -> SendEmail
 makeEmail envVars subText payload = sendEmail (sender envVars) dest msg
   where
-    dest = destination & dToAddresses .~ (recipients envVars)
+    dest = destination & dToAddresses .~ recipients envVars
     msg = message subject body'
     subject = SES.content "" & cData .~ subText
     body' = body & bHTML .~ Just (SES.content payload)
