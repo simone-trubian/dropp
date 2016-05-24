@@ -24,14 +24,15 @@ module Dropp.HttpDataSource
   where
 
 
-import Data.Typeable
 import Dropp.DataTypes
+import Dropp.HTML
+import qualified Lucid as L
+import Data.Typeable
 import GHC.Exception (Exception)
 import Control.Monad (void)
 import Text.Printf (printf)
 import Control.Concurrent (threadDelay)
 import Data.ByteString.Lazy (ByteString)
-import Data.ByteString.Lazy.Char8 (pack)
 import Data.Aeson (decode)
 
 
@@ -167,11 +168,9 @@ getHTML
 getHTML url = catch (dataFetch $ GetHTML url) dummyPage
   where
     dummyPage :: SomeException -> GenHaxl u ByteString
-    dummyPage _ =
-        return $ pack $
-            "<!DOCTYPE html><html><title>"
-            ++ (urlToStr url)
-            ++"</title></head><body><div class=\"status\">Currently out of stock</div></body>"
+    dummyPage _ = return $ L.renderBS $ bangGoodMockPage block
+
+    block = ItemBlock (urlToText url) "Could not fetch page"
 
 
 getUrls

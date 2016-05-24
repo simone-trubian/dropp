@@ -16,7 +16,6 @@ let
     haxl
     amazonka
     amazonka-ses
-    blaze-html
     servant
     servant-server
     servant-lucid

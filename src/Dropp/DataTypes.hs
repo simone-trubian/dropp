@@ -7,6 +7,7 @@ module Dropp.DataTypes where
 import Haxl.Core (GenHaxl)
 import GHC.Generics (Generic)
 import Data.Text.Internal (Text)
+import Data.Text (pack)
 import Data.Hashable
   ( Hashable
   , hash)
@@ -33,9 +34,9 @@ instance Hashable URL where
 
 
 -- |Unbox the payload in the URL type and convert it to Byte String.
-urlToStr :: URL -> String
-urlToStr (HtmlUrl url) = url
-urlToStr (JsonUrl url) = url
+urlToText :: URL -> Text
+urlToText (HtmlUrl url) = pack url
+urlToText (JsonUrl url) = pack url
 
 
 -- |Json object returned by the /urls endpoint.

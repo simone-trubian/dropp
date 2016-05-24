@@ -2,7 +2,9 @@
 
 
 import Dropp.HTML
-import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Dropp.DataTypes
+import qualified Lucid as L
+import qualified Data.Text as T
 import Data.ByteString.Lazy.Internal (ByteString)
 import Data.ByteString.Lazy.Char8 (pack)
 import Test.Tasty
@@ -45,22 +47,21 @@ email = testGroup "Email formatting tests"
       $ assertFormatting "Currently out of stock" "color:red"
 
   , testCase "Unexpected availability is formatted blue"
-      $ assertFormatting "Status" "color:blue"]
+      $ assertFormatting "Could not fetch page" "color:blue"]
 
 
 -- | Assert that availability string is formatted with the right colour.
 assertFormatting status color =
     assertEqual
         ""
-        (renderHtml $ formatBlock (pageTemplate status))
+        (L.renderBS $ formatBlock (pageTemplate status))
         (resultTemplate status color)
 
 
 pageTemplate :: String -> ByteString
-pageTemplate status = pack $
-    "<!DOCTYPE html><html><title>Title</title></head><body><div class=\"status\">"
-    ++ status
-    ++ "</div></body>"
+pageTemplate status = L.renderBS $ bangGoodMockPage block
+  where
+    block = ItemBlock "Title" (T.pack status)
 
 
 resultTemplate :: String -> String -> ByteString

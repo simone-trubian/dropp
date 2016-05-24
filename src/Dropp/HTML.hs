@@ -7,7 +7,8 @@ module Dropp.HTML
   , formatOutput
   , formatBlock
   , formatItemCount
-  , renderAvailability)
+  , renderAvailability
+  , bangGoodMockPage)
   where
 
 
@@ -16,17 +17,8 @@ import Data.Text.Internal (Text)
 import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
-import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import Text.Blaze.Html5.Attributes (style)
 import Text.Parsec.Pos (SourceName)
 import Text.Parsec.Error (ParseError)
-import Text.Blaze.Internal (AttributeValue)
-import Text.Blaze.Html5
-  ( Html
-  , toHtml
-  , ul
-  , li
-  , (!))
 
 import Text.XML.Cursor
   ( Cursor
@@ -46,6 +38,19 @@ import Text.Parsec
   , digit
   , parse)
 
+import qualified Lucid as L
+  -- ( ToHtml
+  -- , HtmlT
+  -- , Html
+  -- , toHtml
+  -- , toHtmlRaw
+  -- , renderBS
+  -- , html_
+  -- , title_
+  -- , body_
+  -- , div_
+  -- , class_)
+
 
 -- ------------------------------------------------------------------------- --
 --              BANGGOOD
@@ -55,16 +60,18 @@ import Text.Parsec
 formatOutput
     :: [ByteString] -- ^List of all pages scraped from the suppliers website.
     -> ByteString -- ^HTML payload of the report email
-formatOutput pages = renderHtml $ ul $ mapM_ formatBlock pages
+formatOutput pages = L.renderBS $ L.ul_ $ mapM_ formatBlock pages
 
 
 -- | Generate HTML list comprised of an item name, coming from the item page
 -- title and its colour-coded availability string.
-formatBlock :: ByteString -> Html
-formatBlock page = li $ ul (do
-    li $ toHtml $ title block
-    renderAvailability block)
-    ! style "list-style-type:none; margin:10px 0"
+formatBlock :: Monad m => ByteString -> L.HtmlT m ()
+formatBlock page =
+    L.li_
+      $ L.ul_ [L.style_ "list-style-type:none; margin:10px 0"]
+         $ do L.li_ (L.toHtml $ title block)
+              renderAvailability block
+
   where
     block = makeBlock page
 
@@ -79,8 +86,8 @@ formatBlock page = li $ ul (do
 --
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
-renderAvailability :: ItemBlock -> Html
-renderAvailability block = li (toHtml content) ! style (color content)
+renderAvailability :: Monad m => ItemBlock -> L.HtmlT m ()
+renderAvailability block = L.li_ [L.style_ (color content)] (L.toHtml content)
   where
     content = availability block
     color txt
@@ -96,7 +103,7 @@ renderAvailability block = li (toHtml content) ! style (color content)
 -- items is <= 5 the items is considered "going quick" and marked orange. If
 -- the parser fails the availability string is different from all expected
 -- values and therefore marked blue.
-formatItemCount :: Text -> AttributeValue
+formatItemCount :: Text -> Text
 formatItemCount txt =
   case parse parser "" txt of
     Right str -> decideCount str
@@ -146,3 +153,10 @@ parseBangAva cursor =
     element "div" >=>
     attributeIs "class" "status" >=>
     child
+
+
+bangGoodMockPage :: Monad m => ItemBlock -> L.HtmlT m ()
+bangGoodMockPage block =
+    L.html_ $ do
+      L.title_ (L.toHtml $ title block)
+      L.body_ (L.div_ [L.class_ "status"] (L.toHtml $ availability block))
