@@ -61,7 +61,8 @@ main :: IO ()
 main = do
 
     -- Read configuration file.
-    vars <- decode <$> By.readFile "./settings/settings.yaml" :: IO (Maybe Env)
+    [filePath] <- getArgs
+    vars <- decode <$> By.readFile filePath :: IO (Maybe Env)
     let envVars = fromJust vars
 
     -- Fetch pages urls from DB.
