@@ -3,6 +3,7 @@ module Main where
 
 import Dropp.DataTypes
 import Dropp.HTML
+import Lucid
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Data.Text.Internal (Text)
@@ -20,7 +21,6 @@ import Network.HTTP.Media
   ( (//)
   , (/:))
 
-import qualified Lucid as L
 
 -- ------------------------------------------------------------------------- --
 --              API DEFINITION
@@ -30,26 +30,32 @@ data HTMLLucid
 
 
 type TestAPI = "bangOK" :> Capture "title" Text :> Get '[HTMLLucid] ItemBlock
-           :<|> "bangJSON" :> Capture "count" Int :> Get '[JSON] JsonAv
+          :<|> "ebay" :> Capture "isOn" Bool :> Get '[HTMLLucid] EbayStatus
+          :<|> "bangJSON" :> Capture "count" Int :> Get '[JSON] JsonAv
 
 
 -- ------------------------------------------------------------------------- --
 --              BOILERPLATE
 -- ------------------------------------------------------------------------- --
 
-instance L.ToHtml a => MimeRender HTMLLucid a where
-    mimeRender _ = L.renderBS . L.toHtml
+instance ToHtml a => MimeRender HTMLLucid a where
+    mimeRender _ = renderBS . toHtml
 
 
 instance Accept HTMLLucid where
     contentType _ = "text" // "html" /: ("charset", "utf-8")
 
 
-instance L.ToHtml ItemBlock where
+instance ToHtml ItemBlock where
   toHtml = bangGoodMockPage
 
-  toHtmlRaw = L.toHtml
+  toHtmlRaw = toHtml
 
+
+instance ToHtml EbayStatus where
+  toHtml = ebayMockPage
+
+  toHtmlRaw = toHtml
 
 -- ------------------------------------------------------------------------- --
 --              BOILERPLATE
@@ -64,7 +70,9 @@ blockAPI = Proxy
 
 
 server :: Server TestAPI
-server = bangOK :<|> bangJSON
+server = bangOK
+    :<|> ebay
+    :<|> bangJSON
 
   where
     bangOK :: Text -> EitherT ServantErr IO ItemBlock
@@ -73,6 +81,9 @@ server = bangOK :<|> bangJSON
 
     bangJSON :: Int -> EitherT ServantErr IO JsonAv
     bangJSON availability = return (JsonAv availability)
+
+    ebay :: Bool -> EitherT ServantErr IO EbayStatus
+    ebay isOn = return (EbayStatus isOn)
 
 
 app :: Application

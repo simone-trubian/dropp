@@ -90,6 +90,7 @@ executable locserv
       FlexibleInstances
       MultiParamTypeClasses
 
+
 -- TODO: Please ckeck what is the version used in nix.
   build-depends:
       base >=4.8 && <4.9

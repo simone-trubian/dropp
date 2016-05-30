@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 -- |This module contains HTML manipulation functions, in particular HTML
 -- parsing and HTML generation. The module employs the
 -- <https://jaspervdj.be/blaze/ blaze> and
@@ -8,11 +10,13 @@ module Dropp.HTML
   , formatBlock
   , formatItemCount
   , renderAvailability
-  , bangGoodMockPage)
+  , bangGoodMockPage
+  , ebayMockPage)
   where
 
 
 import Dropp.DataTypes
+import Lucid
 import Data.Text.Internal (Text)
 import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
@@ -38,19 +42,6 @@ import Text.Parsec
   , digit
   , parse)
 
-import qualified Lucid as L
-  -- ( ToHtml
-  -- , HtmlT
-  -- , Html
-  -- , toHtml
-  -- , toHtmlRaw
-  -- , renderBS
-  -- , html_
-  -- , title_
-  -- , body_
-  -- , div_
-  -- , class_)
-
 
 -- ------------------------------------------------------------------------- --
 --              BANGGOOD
@@ -60,16 +51,16 @@ import qualified Lucid as L
 formatOutput
     :: [ByteString] -- ^List of all pages scraped from the suppliers website.
     -> ByteString -- ^HTML payload of the report email
-formatOutput pages = L.renderBS $ L.ul_ $ mapM_ formatBlock pages
+formatOutput pages = renderBS $ ul_ $ mapM_ formatBlock pages
 
 
 -- | Generate HTML list comprised of an item name, coming from the item page
 -- title and its colour-coded availability string.
-formatBlock :: Monad m => ByteString -> L.HtmlT m ()
+formatBlock :: Monad m => ByteString -> HtmlT m ()
 formatBlock page =
-    L.li_
-      $ L.ul_ [L.style_ "list-style-type:none; margin:10px 0"]
-         $ do L.li_ (L.toHtml $ title block)
+    li_
+      $ ul_ [style_ "list-style-type:none; margin:10px 0"]
+         $ do li_ (toHtml $ title block)
               renderAvailability block
 
   where
@@ -86,8 +77,8 @@ formatBlock page =
 --
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
-renderAvailability :: Monad m => ItemBlock -> L.HtmlT m ()
-renderAvailability block = L.li_ [L.style_ (color content)] (L.toHtml content)
+renderAvailability :: Monad m => ItemBlock -> HtmlT m ()
+renderAvailability block = li_ [style_ (color content)] (toHtml content)
   where
     content = availability block
     color txt
@@ -155,8 +146,29 @@ parseBangAva cursor =
     child
 
 
-bangGoodMockPage :: Monad m => ItemBlock -> L.HtmlT m ()
+bangGoodMockPage :: Monad m => ItemBlock -> HtmlT m ()
 bangGoodMockPage block =
-    L.html_ $ do
-      L.title_ (L.toHtml $ title block)
-      L.body_ (L.div_ [L.class_ "status"] (L.toHtml $ availability block))
+    html_ $ do
+      title_ (toHtml $ title block)
+      body_ (div_ [class_ "status"] (toHtml $ availability block))
+
+
+-- ------------------------------------------------------------------------- --
+--              EBAY
+-- ------------------------------------------------------------------------- --
+
+ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
+ebayMockPage (EbayStatus isOn) = html_ $ do
+
+    let sentence = "Questa inserzione è stata chiusa dal venditore perché l'oggetto non è più disponibile." :: String
+
+    let banner = span_ [class_ "statusLeftContent"]
+          $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
+            (toHtml sentence)
+
+    let decoy = span_ $ p_ "bblbl"
+
+    let content = if isOn then banner else decoy
+
+    body_ content
+

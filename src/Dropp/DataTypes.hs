@@ -64,7 +64,7 @@ instance Show ItemBlock where
         show title ++ "\n" ++ show availability
 
 
--- |Provisional data structure as captured from the JSON object of variable items.
+-- | Provisional data structure as captured from the JSON object of variable items.
 data JsonAv = JsonAv {itemCount :: Int}
 
   deriving (Show, Generic)
@@ -73,7 +73,7 @@ instance FromJSON JsonAv
 instance ToJSON JsonAv
 
 
--- |Environment variables data type.
+-- | Environment variables data type.
 data Env = Env
   { recipients :: [Text]
   , sender :: Text
@@ -83,3 +83,7 @@ data Env = Env
 
 instance FromJSON Env
 instance ToJSON Env
+
+
+-- | Type alias for an ebay status.
+data EbayStatus = EbayStatus Bool
