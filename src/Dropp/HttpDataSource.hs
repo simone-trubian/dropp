@@ -15,10 +15,8 @@
 -- pages.
 module Dropp.HttpDataSource
   ( HttpException
-  , URL (..)
-  , Urls (..)
   , getHTML
-  , getUrls
+  , getItems
   , getPages
   , initDataSource)
   where
@@ -86,9 +84,9 @@ data HttpReq a where
         :: URL --  URL literal to be fetched.
         -> HttpReq ByteString --  HTML bytestring boxed in a Haxl fetch.
 
-    GetUrls
+    GetItems
         :: URL --  URL literal to be fetched.
-           -> HttpReq (Maybe [Urls]) --  Aeson JSON boxed in a Haxl fetch.
+           -> HttpReq (Maybe [Item]) --  Aeson JSON boxed in a Haxl fetch.
 
 deriving instance Show (HttpReq a)
 
@@ -102,7 +100,7 @@ instance Hashable (HttpReq a) where
     hashWithSalt salt (GetHTML (url :: URL)) =
         hashWithSalt salt (0 :: Int, url :: URL)
 
-    hashWithSalt salt (GetUrls (url :: URL)) =
+    hashWithSalt salt (GetItems (url :: URL)) =
         hashWithSalt salt (1 :: Int, url :: URL)
 
 instance DataSourceName HttpReq where
@@ -137,7 +135,7 @@ fetchURL mgr (BlockedFetch (GetHTML (HtmlUrl url)) var) =
     fetchHttp mgr url >>= either (putFailure var) (putSuccess var)
 
 
-fetchURL mgr (BlockedFetch (GetUrls (JsonUrl url)) var) =
+fetchURL mgr (BlockedFetch (GetItems (JsonUrl url)) var) =
     fetchHttp mgr url >>= \bytes -> either (putFailure var) (putSuccess var)
         (decode <$> bytes)
 
@@ -171,13 +169,13 @@ getHTML url = catch (dataFetch $ GetHTML url) dummyPage
     block = ItemBlock (urlToText url) "Could not fetch page"
 
 
-getUrls
+getItems
     :: URL -- ^ HTML url to be fetched.
-    -> GenHaxl u (Maybe [Urls]) -- ^ Haxl fetch.
+    -> GenHaxl u (Maybe [Item]) -- ^ Haxl fetch.
 
-getUrls url = catch (dataFetch $ GetUrls url) noList
+getItems url = catch (dataFetch $ GetItems url) noList
   where
-    noList :: SomeException -> GenHaxl u (Maybe [Urls])
+    noList :: SomeException -> GenHaxl u (Maybe [Item])
     noList _ = return Nothing
 
 

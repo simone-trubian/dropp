@@ -66,9 +66,9 @@ main = do
     let envVars = fromJust vars
 
     -- Fetch pages urls from DB.
-    [dbUrls] <- getPages $ mapM getUrls [JsonUrl (dbUrls envVars)]
+    [dbItems] <- getPages $ mapM getItems [JsonUrl (dbUrls envVars)]
 
-    let urls = map (HtmlUrl . url) $ fromJust dbUrls
+    let urls = map source_url $ fromJust dbItems
 
     -- Fetch all pages listed in the DB table.
     pages <- getPages $ mapM getHTML urls

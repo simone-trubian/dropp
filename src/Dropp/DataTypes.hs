@@ -4,17 +4,25 @@
 module Dropp.DataTypes where
 
 
+import Data.Aeson
 import Haxl.Core (GenHaxl)
 import GHC.Generics (Generic)
 import Data.Text.Internal (Text)
-import Data.Text (pack)
+import qualified Data.HashMap.Lazy as HML (lookup)
+import Control.Applicative
+  ( pure
+  , empty)
+
+import Data.Text
+  ( pack
+  , unpack
+  , takeEnd)
+
 import Data.Hashable
   ( Hashable
   , hash)
 
-import Data.Aeson
-  ( FromJSON
-  , ToJSON)
+import Data.Aeson.Types (Parser)
 
 
 -- |Convenience alias for a GenHaxl with no user crentials.
@@ -32,20 +40,30 @@ instance Hashable URL where
     hash (HtmlUrl url) = hash $ show url
     hash (JsonUrl url) = hash $ show url
 
+instance FromJSON URL where
+    parseJSON (String s) = case takeEnd 4 s of
+        "html" -> pure (HtmlUrl $ unpack s)
+        otherwise ->  pure (JsonUrl $ unpack s)
 
--- |Unbox the payload in the URL type and convert it to Byte String.
+    parseJSON _ = empty
+
+instance ToJSON URL
+
+-- |Unbox the payload in the URL type and convert it to Text.
 urlToText :: URL -> Text
 urlToText (HtmlUrl url) = pack url
 urlToText (JsonUrl url) = pack url
 
 
--- |Json object returned by the /urls endpoint.
-data Urls = Url {url :: String}
+data Item = Item
+  { source_url :: URL
+  , ebay_url :: URL
+  , item_name :: Text }
 
   deriving (Show, Generic)
 
-instance FromJSON Urls
-instance ToJSON Urls
+instance FromJSON Item
+instance ToJSON Item
 
 
 -- | Contains the data regarding a single item as it is parsed from the scraped
