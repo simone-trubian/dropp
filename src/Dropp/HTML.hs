@@ -2,13 +2,14 @@
 
 -- |This module contains HTML manipulation functions, in particular HTML
 -- parsing and HTML generation. The module employs the
--- <https://jaspervdj.be/blaze/ blaze> and
+-- <https://hackage.haskell.org/package/lucid lucid> and
 -- <https://hackage.haskell.org/package/html-conduit html-conduit> libraries.
 module Dropp.HTML
   ( formatOutput
   , formatBlock
   , formatItemCount
   , renderAvailability
+  , scrapeEbayStatus 
   , bangGoodMockPage
   , ebayMockPage)
   where
@@ -163,7 +164,7 @@ bangGoodMockPage = undefined
 -- ------------------------------------------------------------------------- --
 
 ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
-ebayMockPage (EbayStatus isOn) = html_ $ do
+ebayMockPage isOn = html_ $ do
 
     let sentence = "Questa inserzione è stata chiusa dal venditore perché l'oggetto non è più disponibile." :: String
 
@@ -173,7 +174,12 @@ ebayMockPage (EbayStatus isOn) = html_ $ do
 
     let decoy = span_ $ p_ "bblbl"
 
-    let content = if isOn then banner else decoy
+    let content = case isOn of
+          On -> banner
+          Off -> decoy
 
     body_ content
 
+
+scrapeEbayStatus :: ByteString -> Maybe EbayStatus
+scrapeEbayStatus = undefined

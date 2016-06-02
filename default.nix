@@ -22,6 +22,7 @@ let
     wai
     warp
     yaml
+    safe
 
     # Testing
     hlint

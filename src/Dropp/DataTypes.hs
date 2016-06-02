@@ -8,7 +8,6 @@ import Data.Aeson
 import Haxl.Core (GenHaxl)
 import GHC.Generics (Generic)
 import Data.Text.Internal (Text)
-import qualified Data.HashMap.Lazy as HML (lookup)
 import Control.Applicative
   ( pure
   , empty)
@@ -28,6 +27,10 @@ import Data.Aeson.Types (Parser)
 -- |Convenience alias for a GenHaxl with no user crentials.
 type Haxl a = GenHaxl () a
 
+
+-- ------------------------------------------------------------------------- --
+--              URL
+-- ------------------------------------------------------------------------- --
 
 -- |URL literal.
 data URL =
@@ -55,33 +58,41 @@ urlToText (HtmlUrl url) = pack url
 urlToText (JsonUrl url) = pack url
 
 
+
+-- ------------------------------------------------------------------------- --
+--              EBAY STATUS
+-- ------------------------------------------------------------------------- --
+
+-- | Type alias for an ebay status.
+data EbayStatus = On | Off
+
+  deriving (Show, Ord, Eq, Generic)
+
+instance FromJSON EbayStatus where
+    parseJSON (String s) = case s of
+        "on" -> pure On
+        "off" -> pure Off
+        _ -> empty
+
+    parseJSON _ = empty
+
+instance ToJSON EbayStatus
+
+-- ------------------------------------------------------------------------- --
+--              ITEM
+-- ------------------------------------------------------------------------- --
+
 data Item = Item
   { source_url :: Text
   , ebay_url :: Text
   , item_name :: Text
   , availability :: Maybe Text
-  , onEbay :: Mabye Bool}
+  , onEbay :: Maybe EbayStatus}
 
   deriving (Show, Generic)
 
 instance FromJSON Item
 instance ToJSON Item
-
-
--- -- | Contains the data regarding a single item as it is parsed from the scraped
--- -- from the provider website.
--- data ItemBlock = ItemBlock
---   { -- |Long-hand name of the item as it parsed from the title of its BangGood
---     -- web page.
---     title :: Text
---     -- |Long-hand availability as it is parsed from the status div of  its
---     -- BangGood web page.
---   , availability :: Text}
--- 
--- 
--- instance Show ItemBlock where
---     show (ItemBlock title availability) =
---         show title ++ "\n" ++ show availability
 
 
 -- | Provisional data structure as captured from the JSON object of variable items.
@@ -93,6 +104,17 @@ instance FromJSON JsonAv
 instance ToJSON JsonAv
 
 
+updateItem :: Item -> Maybe Text -> Maybe EbayStatus -> Item
+updateItem item availability ebayStatus = newItem
+  where
+    newItem = item {availability = availability}
+    partialItem = item {onEbay = ebayStatus}
+
+
+-- ------------------------------------------------------------------------- --
+--              ENVIRONMENT
+-- ------------------------------------------------------------------------- --
+
 -- | Environment variables data type.
 data Env = Env
   { recipients :: [Text]
@@ -103,7 +125,3 @@ data Env = Env
 
 instance FromJSON Env
 instance ToJSON Env
-
-
--- | Type alias for an ebay status.
-data EbayStatus = EbayStatus Bool
