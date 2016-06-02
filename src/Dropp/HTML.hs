@@ -5,8 +5,7 @@
 -- <https://jaspervdj.be/blaze/ blaze> and
 -- <https://hackage.haskell.org/package/html-conduit html-conduit> libraries.
 module Dropp.HTML
-  ( ItemBlock (..)
-  , formatOutput
+  ( formatOutput
   , formatBlock
   , formatItemCount
   , renderAvailability
@@ -60,7 +59,7 @@ formatBlock :: Monad m => ByteString -> HtmlT m ()
 formatBlock page =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-         $ do li_ (toHtml $ title block)
+         $ do li_ (toHtml $ item_name block)
               renderAvailability block
 
   where
@@ -77,10 +76,14 @@ formatBlock page =
 --
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
-renderAvailability :: Monad m => ItemBlock -> HtmlT m ()
+renderAvailability :: Monad m => Item-> HtmlT m ()
 renderAvailability block = li_ [style_ (color content)] (toHtml content)
   where
-    content = availability block
+    -- content :: Item -> Text
+    content = case availability block of
+        (Just av) -> av
+        Nothing -> "could not fetch item."
+
     color txt
       | txt == "Currently out of stock" = "color:red"
       | txt == "In stock, usually dispatched in 1 business day" = "color:green"
@@ -112,12 +115,13 @@ formatItemCount txt =
 
 
 -- | Generate an item block starting from a BangGood item page.
-makeBlock :: ByteString -> ItemBlock
-makeBlock page = ItemBlock getTitle getAvailability
-  where
-    getTitle = parseBangTitle cursor
-    getAvailability = parseBangAva cursor
-    cursor = makeCursor page
+makeBlock :: ByteString -> Item
+makeBlock = undefined
+-- makeBlock page = ItemBlock getTitle getAvailability
+--   where
+--     getTitle = parseBangTitle cursor
+--     getAvailability = parseBangAva cursor
+--     cursor = makeCursor page
 
 
 -- | Generate a parsing cursor from an HTML page.
@@ -146,11 +150,12 @@ parseBangAva cursor =
     child
 
 
-bangGoodMockPage :: Monad m => ItemBlock -> HtmlT m ()
-bangGoodMockPage block =
-    html_ $ do
-      title_ (toHtml $ title block)
-      body_ (div_ [class_ "status"] (toHtml $ availability block))
+bangGoodMockPage :: Monad m => Item -> HtmlT m ()
+bangGoodMockPage = undefined
+--bangGoodMockPage block =
+--    html_ $ do
+--      title_ (toHtml $ item_name block)
+--      body_ (div_ [class_ "status"] (toHtml $ availability block))
 
 
 -- ------------------------------------------------------------------------- --

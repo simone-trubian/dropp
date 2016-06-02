@@ -52,6 +52,7 @@ library
 
 
   exposed-modules:
+    Dropp.Http
     Dropp.HttpDataSource
     Dropp.HTML
     Dropp.DataTypes

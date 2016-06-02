@@ -56,9 +56,11 @@ urlToText (JsonUrl url) = pack url
 
 
 data Item = Item
-  { source_url :: URL
-  , ebay_url :: URL
-  , item_name :: Text }
+  { source_url :: Text
+  , ebay_url :: Text
+  , item_name :: Text
+  , availability :: Maybe Text
+  , onEbay :: Mabye Bool}
 
   deriving (Show, Generic)
 
@@ -66,20 +68,20 @@ instance FromJSON Item
 instance ToJSON Item
 
 
--- | Contains the data regarding a single item as it is parsed from the scraped
--- from the provider website.
-data ItemBlock = ItemBlock
-  { -- |Long-hand name of the item as it parsed from the title of its BangGood
-    -- web page.
-    title :: Text
-    -- |Long-hand availability as it is parsed from the status div of  its
-    -- BangGood web page.
-  , availability :: Text}
-
-
-instance Show ItemBlock where
-    show (ItemBlock title availability) =
-        show title ++ "\n" ++ show availability
+-- -- | Contains the data regarding a single item as it is parsed from the scraped
+-- -- from the provider website.
+-- data ItemBlock = ItemBlock
+--   { -- |Long-hand name of the item as it parsed from the title of its BangGood
+--     -- web page.
+--     title :: Text
+--     -- |Long-hand availability as it is parsed from the status div of  its
+--     -- BangGood web page.
+--   , availability :: Text}
+-- 
+-- 
+-- instance Show ItemBlock where
+--     show (ItemBlock title availability) =
+--         show title ++ "\n" ++ show availability
 
 
 -- | Provisional data structure as captured from the JSON object of variable items.
