@@ -23,15 +23,30 @@ import Network.HTTP.Conduit
   , parseUrl)
 
 
-getAvailability :: Text -> Maybe Text
-getAvailability = undefined
+getItems :: Manager -> Text -> IO (Maybe [Item])
+getItems manager url = do
+    response <- fetchHttp manager url
+
+    case getContentType $ responseHeaders response of
+      Just "application/json" -> return $ decode $ responseBody response
+      Nothing -> return Nothing
+
+
+getAvailability :: Manager -> Text -> IO (Maybe Text)
+getAvailability manager url = do
+    response <- fetchHttp manager url
+
+    case getContentType $ responseHeaders response of
+      Just "text/html" -> return $ scrapeBGAv $ responseBody response
+      -- Just "application/json" -> return $ decode $ responseBody response
+      Nothing -> return $ scrapeBGAv $ responseBody response
 
 
 getEbayStatus :: Manager -> Text -> IO (Maybe EbayStatus)
 getEbayStatus manager url = do
     response <- fetchHttp manager url
 
-    case (getContentType $ responseHeaders response) of
+    case getContentType $ responseHeaders response of
       Just "text/html" -> return $ scrapeEbayStatus $ responseBody response
       Just "application/json" -> return $ decode $ responseBody response
       Nothing -> return $ scrapeEbayStatus $ responseBody response

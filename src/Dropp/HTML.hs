@@ -9,7 +9,8 @@ module Dropp.HTML
   , formatBlock
   , formatItemCount
   , renderAvailability
-  , scrapeEbayStatus 
+  , scrapeEbayStatus
+  , scrapeBGAv
   , bangGoodMockPage
   , ebayMockPage)
   where
@@ -181,5 +182,13 @@ ebayMockPage isOn = html_ $ do
     body_ content
 
 
+
+-- ------------------------------------------------------------------------- --
+--              SCRAPING
+-- ------------------------------------------------------------------------- --
 scrapeEbayStatus :: ByteString -> Maybe EbayStatus
 scrapeEbayStatus = undefined
+
+
+scrapeBGAv :: ByteString -> Maybe Text
+scrapeBGAv = undefined
