@@ -19,6 +19,7 @@ module Dropp.HTML
 import Dropp.DataTypes
 import Lucid
 import Data.Maybe (fromJust)
+import Safe (headMay)
 import Data.Text.Internal (Text)
 import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
@@ -46,7 +47,7 @@ import Text.Parsec
 
 
 -- ------------------------------------------------------------------------- --
---              BANGGOOD
+--              EMAIL
 -- ------------------------------------------------------------------------- --
 
 -- | Generate the entire HTML payload used as body of the report email.
@@ -117,42 +118,6 @@ formatItemCount txt =
       if read str > 5 then "color:green" else "color:orange"
 
 
--- | Generate an item block starting from a BangGood item page.
-makeBlock :: ByteString -> Item
-makeBlock = undefined
--- makeBlock page = ItemBlock getTitle getAvailability
---   where
---     getTitle = parseBangTitle cursor
---     getAvailability = parseBangAva cursor
---     cursor = makeCursor page
-
-
--- | Generate a parsing cursor from an HTML page.
-makeCursor :: ByteString -> Cursor
-makeCursor = fromDocument . parseLBS
-
-
--- | Extract the title of a BangGood item page from the cursor opened on that
--- page.
-parseBangTitle :: Cursor -> Text
-parseBangTitle cursor =
-    head . content . head $
-    cursor $//
-    element "title" >=>
-    child
-
-
--- | Extract the availability of a BangGood item page from the cursor opened on
--- that page.
-parseBangAva :: Cursor -> Text
-parseBangAva cursor =
-    head . content . head $
-    cursor $//
-    element "div" >=>
-    attributeIs "class" "status" >=>
-    child
-
-
 -- ------------------------------------------------------------------------- --
 --              MOCK PAGES
 -- ------------------------------------------------------------------------- --
@@ -191,4 +156,30 @@ scrapeEbayStatus = undefined
 
 
 scrapeBGAv :: ByteString -> Maybe Text
-scrapeBGAv = undefined
+scrapeBGAv = parseBangAva . makeCursor
+
+
+-- | Generate an item block starting from a BangGood item page.
+makeBlock :: ByteString -> Item
+makeBlock = undefined
+
+
+-- | Generate a parsing cursor from an HTML page.
+makeCursor :: ByteString -> Cursor
+makeCursor = fromDocument . parseLBS
+
+
+-- | Extract the availability of a BangGood item page from the cursor opened on
+-- that page.
+parseBangAva :: Cursor -> Maybe Text
+parseBangAva cursor =
+  case divs of
+    Just xs -> headMay $ content xs
+    Nothing -> Nothing
+
+  where
+    divs = headMay $
+        cursor $//
+        element "div" >=>
+        attributeIs "class" "status" >=>
+        child
