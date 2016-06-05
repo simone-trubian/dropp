@@ -29,7 +29,7 @@ import Network.HTTP.Media
 data HTMLLucid
 
 
-type TestAPI = "bangOK" :> Capture "title" Text :> Get '[HTMLLucid] ItemBlock
+type TestAPI = "bangOK" :> Capture "title" Text :> Get '[HTMLLucid] Item
           :<|> "ebay" :> Capture "isOn" Bool :> Get '[HTMLLucid] EbayStatus
           :<|> "bangJSON" :> Capture "count" Int :> Get '[JSON] JsonAv
 
@@ -46,7 +46,7 @@ instance Accept HTMLLucid where
     contentType _ = "text" // "html" /: ("charset", "utf-8")
 
 
-instance ToHtml ItemBlock where
+instance ToHtml Item where
   toHtml = bangGoodMockPage
 
   toHtmlRaw = toHtml
@@ -75,15 +75,15 @@ server = bangOK
     :<|> bangJSON
 
   where
-    bangOK :: Text -> EitherT ServantErr IO ItemBlock
+    bangOK :: Text -> EitherT ServantErr IO Item
     bangOK title =
-        return (ItemBlock title "In stock, usually dispatched in 1 business day")
+        return (Item "" "" title (Just "In stock, usually dispatched in 1 business day") Nothing)
 
     bangJSON :: Int -> EitherT ServantErr IO JsonAv
     bangJSON availability = return (JsonAv availability)
 
     ebay :: Bool -> EitherT ServantErr IO EbayStatus
-    ebay isOn = return (EbayStatus isOn)
+    ebay isOn = return (if isOn then On else Off)
 
 
 app :: Application

@@ -18,6 +18,7 @@ module Dropp.HTML
 
 import Dropp.DataTypes
 import Lucid
+import Data.Maybe (fromJust)
 import Data.Text.Internal (Text)
 import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
@@ -152,17 +153,16 @@ parseBangAva cursor =
     child
 
 
+-- ------------------------------------------------------------------------- --
+--              MOCK PAGES
+-- ------------------------------------------------------------------------- --
+
 bangGoodMockPage :: Monad m => Item -> HtmlT m ()
-bangGoodMockPage = undefined
---bangGoodMockPage block =
---    html_ $ do
---      title_ (toHtml $ item_name block)
---      body_ (div_ [class_ "status"] (toHtml $ availability block))
+bangGoodMockPage block =
+    html_ $ do
+      title_ (toHtml $ item_name block)
+      body_ (div_ [class_ "status"] (toHtml $ fromJust $ availability block))
 
-
--- ------------------------------------------------------------------------- --
---              EBAY
--- ------------------------------------------------------------------------- --
 
 ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
 ebayMockPage isOn = html_ $ do
