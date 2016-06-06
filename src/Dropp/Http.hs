@@ -55,10 +55,11 @@ getEbayStatus :: Manager -> Text -> IO (Maybe EbayStatus)
 getEbayStatus manager url = do
     response <- fetchHttp manager url
 
-    case getContentType $ responseHeaders response of
-      Just "text/html" -> return $ scrapeEbayStatus $ responseBody response
-      Just "application/json" -> return $ decode $ responseBody response
-      Nothing -> return $ scrapeEbayStatus $ responseBody response
+    let cType = getCType $ responseHeaders response
+
+    case cType "text/html" of
+      Right _ -> return $ scrapeEbayStatus $ responseBody response
+      Left _ -> return Nothing
 
 
 fetchHttp :: Manager -> Text -> IO (Response ByteString)

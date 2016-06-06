@@ -5,14 +5,14 @@
 -- <https://hackage.haskell.org/package/lucid lucid> and
 -- <https://hackage.haskell.org/package/html-conduit html-conduit> libraries.
 module Dropp.HTML
-  ( formatOutput
-  , formatBlock
-  , formatItemCount
-  , renderAvailability
-  , scrapeEbayStatus
-  , scrapeBGAv
-  , bangGoodMockPage
-  , ebayMockPage)
+--  ( formatOutput
+--  , formatBlock
+--  , formatItemCount
+--  , renderAvailability
+--  , scrapeEbayStatus
+--  , scrapeBGAv
+--  , bangGoodMockPage
+--  , ebayMockPage)
   where
 
 
@@ -132,11 +132,9 @@ bangGoodMockPage block =
 ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
 ebayMockPage isOn = html_ $ do
 
-    let sentence = "Questa inserzione è stata chiusa dal venditore perché l'oggetto non è più disponibile." :: String
-
     let banner = span_ [class_ "statusLeftContent"]
           $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
-            (toHtml sentence)
+            (toHtml isOffSentence)
 
     let decoy = span_ $ p_ "bblbl"
 
@@ -151,22 +149,8 @@ ebayMockPage isOn = html_ $ do
 -- ------------------------------------------------------------------------- --
 --              SCRAPING
 -- ------------------------------------------------------------------------- --
-scrapeEbayStatus :: ByteString -> Maybe EbayStatus
-scrapeEbayStatus = undefined
-
-
 scrapeBGAv :: ByteString -> Maybe Text
 scrapeBGAv = parseBangAva . makeCursor
-
-
--- | Generate an item block starting from a BangGood item page.
-makeBlock :: ByteString -> Item
-makeBlock = undefined
-
-
--- | Generate a parsing cursor from an HTML page.
-makeCursor :: ByteString -> Cursor
-makeCursor = fromDocument . parseLBS
 
 
 -- | Extract the availability of a BangGood item page from the cursor opened on
@@ -183,3 +167,39 @@ parseBangAva cursor =
         element "div" >=>
         attributeIs "class" "status" >=>
         child
+
+
+scrapeEbayStatus :: ByteString -> Maybe EbayStatus
+scrapeEbayStatus = parseEbayStatus . makeCursor
+
+
+parseEbayStatus :: Cursor -> Maybe EbayStatus
+parseEbayStatus cursor =
+  case spans of
+    Just node -> isOn node
+    Nothing -> Nothing
+
+  where
+    spans =
+        headMay $
+        cursor $//
+        element "span" >=>
+        attributeIs "class" "msgTextAlign"
+
+    isOn node =
+      case content <$> (headMay $ child node) of
+        Just isOffSentence-> Just Off
+        Nothing -> Just On
+
+
+-- | Generate an item block starting from a BangGood item page.
+makeBlock :: ByteString -> Item
+makeBlock = undefined
+
+
+-- | Generate a parsing cursor from an HTML page.
+makeCursor :: ByteString -> Cursor
+makeCursor = fromDocument . parseLBS
+
+
+isOffSentence = "Questa inserzione è stata chiusa dal venditore perché l'oggetto non è più disponibile." :: String
