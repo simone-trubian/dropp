@@ -134,13 +134,15 @@ ebayMockPage isOn = html_ $ do
 
     let banner = span_ [class_ "statusLeftContent"]
           $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
-            (toHtml isOffSentence)
+            $ toHtml isOffSentence
 
-    let decoy = span_ $ p_ "bblbl"
+    let emptyBanner = span_ [class_ "statusLeftContent"]
+          $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
+            $ toHtml ("" :: String)
 
     let content = case isOn of
           On -> banner
-          Off -> decoy
+          Off -> emptyBanner
 
     body_ content
 
