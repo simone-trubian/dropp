@@ -1,7 +1,7 @@
 module Main where
 
 
-import Dropp.HttpDataSource
+import Dropp.Http
 import Dropp.HTML
 import Dropp.DataTypes
 import qualified Data.ByteString as By
@@ -14,6 +14,10 @@ import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
 import Control.Applicative ((<$>))
+import Network.HTTP.Conduit
+  ( newManager
+  , tlsManagerSettings)
+
 import Data.Time.Clock
   ( UTCTime
   , getCurrentTime)
@@ -65,13 +69,14 @@ main = do
     vars <- decode <$> By.readFile filePath :: IO (Maybe Env)
     let envVars = fromJust vars
 
-    -- Fetch pages urls from DB.
-    [dbItems] <- getPages $ mapM getItems [JsonUrl (dbUrls envVars)]
+    -- Create connection manager
+    mgr <- newManager tlsManagerSettings
 
-    let urls = map source_url $ fromJust dbItems
+    -- Fetch pages urls from DB.
+    dbItems <- fromJust <$> (getItems mgr $ dbItemsUrl envVars)
 
     -- Fetch all pages listed in the DB table.
-    pages <- getPages $ mapM getHTML urls
+    items <- mapM (\x -> (updateItem x) <$> getAvailability mgr (source_url x) <*> getEbayStatus mgr (ebay_url x)) dbItems
 
     -- Get timestamp.
     utcTime <- getCurrentTime
@@ -80,7 +85,7 @@ main = do
     let subText = pack $ "Availability " ++ formatTimeStamp utcTime
 
     -- Generate email HTML body.
-    let bodyText = toStrict $ decodeUtf8 $ formatOutput pages
+    let bodyText = toStrict $ decodeUtf8 $ formatOutput items
 
     -- Generate full report email.
     let email = makeEmail envVars subText bodyText

@@ -43,6 +43,7 @@ instance FromJSON EbayStatus where
 
 instance ToJSON EbayStatus
 
+
 -- ------------------------------------------------------------------------- --
 --              ITEM
 -- ------------------------------------------------------------------------- --
@@ -84,7 +85,7 @@ updateItem item availability ebayStatus = newItem
 data Env = Env
   { recipients :: [Text]
   , sender :: Text
-  , dbUrls :: String }
+  , dbItemsUrl :: Text }
 
   deriving (Show, Generic)
 
