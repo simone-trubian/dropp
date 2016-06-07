@@ -1,4 +1,7 @@
-module Dropp.Http where
+module Dropp.Http
+  ( getItemUpdate
+  , getItems)
+where
 
 
 import Dropp.DataTypes
@@ -27,6 +30,13 @@ import Text.Parsec
   ( ParseError
   , string
   , parse)
+
+
+getItemUpdate :: Manager -> Item -> IO Item
+getItemUpdate mgr item =
+    (updateItem item) <$>
+    getAvailability mgr (source_url item) <*>
+    getEbayStatus mgr (ebay_url item)
 
 
 getItems :: Manager -> Text -> IO (Maybe [Item])

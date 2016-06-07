@@ -76,7 +76,7 @@ main = do
     dbItems <- fromJust <$> (getItems mgr $ dbItemsUrl envVars)
 
     -- Fetch all pages listed in the DB table.
-    items <- mapM (\x -> (updateItem x) <$> getAvailability mgr (source_url x) <*> getEbayStatus mgr (ebay_url x)) dbItems
+    items <- mapM (getItemUpdate mgr) dbItems
 
     -- Get timestamp.
     utcTime <- getCurrentTime
