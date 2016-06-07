@@ -5,14 +5,14 @@
 -- <https://hackage.haskell.org/package/lucid lucid> and
 -- <https://hackage.haskell.org/package/html-conduit html-conduit> libraries.
 module Dropp.HTML
---  ( formatOutput
---  , formatBlock
---  , formatItemCount
---  , renderAvailability
---  , scrapeEbayStatus
---  , scrapeBGAv
---  , bangGoodMockPage
---  , ebayMockPage)
+  ( formatOutput
+  , formatItem
+  , formatItemCount
+  , renderAvailability
+  , scrapeEbayStatus
+  , scrapeBGAv
+  , bangGoodMockPage
+  , ebayMockPage)
   where
 
 
@@ -52,22 +52,19 @@ import Text.Parsec
 
 -- | Generate the entire HTML payload used as body of the report email.
 formatOutput
-    :: [ByteString] -- ^List of all pages scraped from the suppliers website.
+    :: [Item] -- ^List of all pages scraped from the suppliers website.
     -> ByteString -- ^HTML payload of the report email
-formatOutput pages = renderBS $ ul_ $ mapM_ formatBlock pages
+formatOutput items = renderBS $ ul_ $ mapM_ formatItem items
 
 
 -- | Generate HTML list comprised of an item name, coming from the item page
 -- title and its colour-coded availability string.
-formatBlock :: Monad m => ByteString -> HtmlT m ()
-formatBlock page =
+formatItem :: Monad m => Item -> HtmlT m ()
+formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-         $ do li_ (toHtml $ item_name block)
-              renderAvailability block
-
-  where
-    block = makeBlock page
+         $ do li_ (toHtml $ item_name item)
+              renderAvailability item
 
 
 -- | Generate an HTML list item containing a colour-coded availabilty string.
@@ -81,10 +78,10 @@ formatBlock page =
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
 renderAvailability :: Monad m => Item-> HtmlT m ()
-renderAvailability block = li_ [style_ (color content)] (toHtml content)
+renderAvailability item = li_ [style_ (color content)] (toHtml content)
   where
-    -- content :: Item -> Text
-    content = case availability block of
+    content :: Text
+    content = case availability item of
         (Just av) -> av
         Nothing -> "could not fetch item."
 
