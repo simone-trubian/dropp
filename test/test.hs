@@ -54,14 +54,8 @@ email = testGroup "Email formatting tests"
 assertFormatting status color =
     assertEqual
         ""
-        (L.renderBS $ formatBlock (pageTemplate status))
+        (L.renderBS $ formatItem (Item "" "" "Title" (Just (T.pack status)) Nothing))
         (resultTemplate status color)
-
-
-pageTemplate :: String -> ByteString
-pageTemplate status = L.renderBS $ bangGoodMockPage block
-  where
-    block = ItemBlock "Title" (T.pack status)
 
 
 resultTemplate :: String -> String -> ByteString
