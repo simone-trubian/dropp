@@ -61,21 +61,11 @@ instance FromJSON Item
 instance ToJSON Item
 
 
--- | Provisional data structure as captured from the JSON object of variable items.
-data JsonAv = JsonAv {itemCount :: Int}
-
-  deriving (Show, Generic)
-
-instance FromJSON JsonAv
-instance ToJSON JsonAv
-
-
 updateItem :: Item -> Maybe Text -> Maybe EbayStatus -> Item
 updateItem item availability ebayStatus = newItem
   where
-    newItem = item {availability = availability}
+    newItem = partialItem {availability = availability}
     partialItem = item {onEbay = ebayStatus}
-
 
 -- ------------------------------------------------------------------------- --
 --              ENVIRONMENT
@@ -91,3 +81,12 @@ data Env = Env
 
 instance FromJSON Env
 instance ToJSON Env
+
+
+-- | Provisional data structure as captured from the JSON object of variable items.
+data JsonAv = JsonAv {itemCount :: Int}
+
+  deriving (Show, Generic)
+
+instance FromJSON JsonAv
+instance ToJSON JsonAv
