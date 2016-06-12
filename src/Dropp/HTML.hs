@@ -9,6 +9,7 @@ module Dropp.HTML
   , formatItem
   , formatItemCount
   , renderAvailability
+  , renderEbayStatus
   , scrapeEbayStatus
   , scrapeBGAv
   , bangGoodMockPage
@@ -62,7 +63,8 @@ formatOutput items = renderBS $ ul_ $ mapM_ formatItem items
 -- [@Item name@] The name of the item, as defined in the item data base record
 -- is formatted as an anchor. The href of the anchor is the source_url of the item
 -- record.
--- [@Ebay status@]
+-- [@Ebay status@] Status of the Ebay store item as formatted by the
+-- 'renderEbayStatus' function.
 -- [@Source availability@] Availability of the item as formatted by the
 -- 'renderAvaliablity' function.
 formatItem :: Monad m => Item -> HtmlT m ()
@@ -70,7 +72,34 @@ formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
          $ do li_ (a_ [href_ (source_url item)] (toHtml $ item_name item))
+              renderEbayStatus item
               renderAvailability item
+
+
+-- | Generate an HTML list item containing a colour-coded ebay status string.
+-- The status string is color coded in the following manner:
+--
+-- [@On@] Green.
+-- [@Off@] Orange.
+-- [@Unrecognised@] Blue.
+--
+-- The ebay status is also an achor with its page url as href. The color
+-- coding is achieved by modifying the style attribute of the <li> tag.
+renderEbayStatus :: Monad m => Item -> HtmlT m ()
+renderEbayStatus item =
+    li_
+        (a_ [href_ (ebay_url item), style_ color] (toHtml content))
+  where
+    content :: Text
+    content = case onEbay item of
+        Just On -> "on ebay"
+        Just Off -> "off ebay"
+        Nothing -> "could not fetch ebay status"
+
+    color = case onEbay item of
+        Just On -> "color:green"
+        Just Off -> "color:red"
+        Nothing -> "color:blue"
 
 
 -- | Generate an HTML list item containing a colour-coded availabilty string.
@@ -88,8 +117,8 @@ renderAvailability item = li_ [style_ (color content)] (toHtml content)
   where
     content :: Text
     content = case availability item of
-        (Just av) -> av
-        Nothing -> "could not fetch item."
+        Just av -> av
+        Nothing -> "could not fetch item availability"
 
     color txt
       | txt == "Currently out of stock" = "color:red"

@@ -28,30 +28,50 @@ tests = testGroup "Tests" [email]
 
 email :: TestTree
 email = testGroup "Email formatting tests"
-  [ testCase "Available status is formatted green"
+  [ testCase "Available status is formatted green - on ebay is formatted green"
       $ assertFormatting
           "In stock, usually dispatched in 1 business day"
           "color:green"
+          (Just On)
+          "on ebay"
+          "color:green"
 
-  , testCase "More than five items are formatted green"
+  , testCase "More than five items are formatted green - on ebay is formatted green"
       $ assertFormatting
           "Only 10 units,dispatched in 1 business day"
           "color:green"
+          (Just On)
+          "on ebay"
+          "color:green"
 
-  , testCase "Less than five items are formatted orange"
+  , testCase "Less than five items are formatted orange - off ebay is formatted red"
       $ assertFormatting
           "Only 5 units,dispatched in 1 business day"
           "color:orange"
+          (Just Off)
+          "off ebay"
+          "color:red"
 
-  , testCase "No availability is formatted red"
-      $ assertFormatting "Currently out of stock" "color:red"
+  , testCase "No availability is formatted red - off ebay is formatted red"
+      $ assertFormatting
+          "Currently out of stock"
+          "color:red"
+          (Just Off)
+          "off ebay"
+          "color:red"
 
-  , testCase "Unexpected availability is formatted blue"
-      $ assertFormatting "Could not fetch page" "color:blue"]
+  , testCase "Unexpected availability is formatted blue - no ebay status is formatted blue"
+      $ assertFormatting
+          "Could not fetch item availability"
+          "color:blue"
+          Nothing
+          "could not fetch ebay status"
+          "color:blue"
+  ]
 
 
 -- | Assert that availability string is formatted with the right colour.
-assertFormatting status color =
+assertFormatting status color ebayStatus ebayString ebayColor =
     assertEqual
         ""
         (L.renderBS $ formatItem
@@ -60,13 +80,19 @@ assertFormatting status color =
             "http://ebay.com"
             "Title"
             (Just (T.pack status))
-            Nothing))
-        (resultTemplate status color)
+            ebayStatus))
+        (resultTemplate status color ebayString ebayColor)
 
 
-resultTemplate :: String -> String -> ByteString
-resultTemplate status color = pack $
+-- resultTemplate :: String -> String -> ByteString
+resultTemplate status color ebayStatus ebayColor = pack $
     "<li><ul style=\"list-style-type:none; margin:10px 0\">"
     ++ "<li><a href=\"http://source.com\">Title</a></li>"
+
+    ++ "<li>"
+    ++ "<a style=\"" ++ ebayColor ++ "\" href=\"http://ebay.com\">"
+        ++ ebayStatus ++ "</a></li>"
+
     ++ "<li style=\"" ++ color ++ "\">"
-    ++ status ++ "</li></ul></li>"
+    ++ status ++ "</li>"
+    ++ "</ul></li>"
