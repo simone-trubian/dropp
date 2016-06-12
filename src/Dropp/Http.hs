@@ -1,6 +1,10 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Dropp.Http
   ( getItemUpdate
   , getItems)
+
 where
 
 
@@ -8,11 +12,25 @@ import Dropp.DataTypes
 import Dropp.HTML
 import Data.Text.Internal (Text)
 import Safe (headMay)
-import Data.Maybe (fromJust)
+import Data.Either (isRight)
 import Data.Text (unpack)
 import Data.Aeson (decode)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString as Bs (ByteString)
+import Control.Exception.Lifted (catch)
+import Control.Monad.Trans.Maybe
+  ( MaybeT
+  , runMaybeT)
+
+import Data.Maybe
+  ( fromJust
+  , isJust)
+
+import Control.Monad
+  ( mzero
+  , guard)
+
+
 import Network.HTTP.Types.Header
   ( ResponseHeaders
   , Header
@@ -21,6 +39,7 @@ import Network.HTTP.Types.Header
 import Network.HTTP.Conduit
   ( Manager
   , Response
+  , HttpException
   , httpLbs
   , responseHeaders
   , responseBody
@@ -32,6 +51,8 @@ import Text.Parsec
   , parse)
 
 
+type MaybeIO = MaybeT IO
+
 getItemUpdate :: Manager -> Item -> IO Item
 getItemUpdate mgr item =
     (updateItem item) <$>
@@ -40,42 +61,44 @@ getItemUpdate mgr item =
 
 
 getItems :: Manager -> Text -> IO (Maybe [Item])
-getItems manager url = do
-    response <- fetchHttp manager url
-
-    let cType = getCType $ responseHeaders response
-
-    case cType "application/json" of
-      Right _ -> return $ decode $ responseBody response
-      Left _ -> return Nothing
+getItems mgr url =
+    runMaybeT
+    $ getHttp mgr url "application/json" decode
 
 
 getAvailability :: Manager -> Text -> IO (Maybe Text)
-getAvailability manager url = do
-    response <- fetchHttp manager url
+getAvailability mgr url =
+    runMaybeT
+    $ getHttp mgr url "text/html" scrapeBGAv
 
-    let cType = getCType $ responseHeaders response
-
-    case cType "text/html" of
-      Right _ -> return $ scrapeBGAv $ responseBody response
-      Left _ -> return Nothing
 
 
 getEbayStatus :: Manager -> Text -> IO (Maybe EbayStatus)
-getEbayStatus manager url = do
-    response <- fetchHttp manager url
+getEbayStatus mgr url =
+    runMaybeT
+    $ getHttp mgr url "text/html" scrapeEbayStatus
+
+
+-- | I'm a keeper!
+getHttp :: Manager -> Text -> String -> (ByteString -> Maybe a) -> MaybeIO a
+getHttp mgr url contentType function = do
+    res <- catch
+        (function <$> fetchHttp mgr url contentType)
+        (\(x :: HttpException)-> mzero)
+
+    guard (isJust res)
+    return $ fromJust res
+
+
+fetchHttp :: Manager -> Text -> String -> MaybeIO ByteString
+fetchHttp manager url contentType = do
+    request <- parseUrl $ unpack url
+    response <- (httpLbs request manager)
 
     let cType = getCType $ responseHeaders response
 
-    case cType "text/html" of
-      Right _ -> return $ scrapeEbayStatus $ responseBody response
-      Left _ -> return Nothing
-
-
-fetchHttp :: Manager -> Text -> IO (Response ByteString)
-fetchHttp manager url = do
-    request <- parseUrl $ unpack url
-    httpLbs request manager
+    guard (isRight $ cType contentType)
+    return (responseBody response)
 
 
 getContentType :: ResponseHeaders -> Maybe Bs.ByteString
