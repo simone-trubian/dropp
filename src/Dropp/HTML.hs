@@ -57,13 +57,19 @@ formatOutput
 formatOutput items = renderBS $ ul_ $ mapM_ formatItem items
 
 
--- | Generate HTML list comprised of an item name, coming from the item page
--- title and its colour-coded availability string.
+-- | Generate HTML list element comprised of:
+--
+-- [@Item name@] The name of the item, as defined in the item data base record
+-- is formatted as an anchor. The href of the anchor is the source_url of the item
+-- record.
+-- [@Ebay status@]
+-- [@Source availability@] Availability of the item as formatted by the
+-- 'renderAvaliablity' function.
 formatItem :: Monad m => Item -> HtmlT m ()
 formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-         $ do li_ (toHtml $ item_name item)
+         $ do li_ (a_ [href_ (source_url item)] (toHtml $ item_name item))
               renderAvailability item
 
 

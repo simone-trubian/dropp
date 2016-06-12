@@ -54,12 +54,19 @@ email = testGroup "Email formatting tests"
 assertFormatting status color =
     assertEqual
         ""
-        (L.renderBS $ formatItem (Item "" "" "Title" (Just (T.pack status)) Nothing))
+        (L.renderBS $ formatItem
+          (Item
+            "http://source.com"
+            "http://ebay.com"
+            "Title"
+            (Just (T.pack status))
+            Nothing))
         (resultTemplate status color)
 
 
 resultTemplate :: String -> String -> ByteString
 resultTemplate status color = pack $
-    "<li><ul style=\"list-style-type:none; margin:10px 0\"><li>Title</li>"
+    "<li><ul style=\"list-style-type:none; margin:10px 0\">"
+    ++ "<li><a href=\"http://source.com\">Title</a></li>"
     ++ "<li style=\"" ++ color ++ "\">"
     ++ status ++ "</li></ul></li>"
