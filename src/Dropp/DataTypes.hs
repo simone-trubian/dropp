@@ -29,7 +29,9 @@ import Data.Aeson.Types (Parser)
 -- ------------------------------------------------------------------------- --
 
 -- | Type alias for an ebay status.
-data EbayStatus = On | Off
+data EbayStatus =
+    On -- ^ Item is available to purchase from Ebay.
+  | Off -- ^ Item has been removed from the Ebay store.
 
   deriving (Show, Ord, Eq, Generic)
 
@@ -49,10 +51,19 @@ instance ToJSON EbayStatus
 -- ------------------------------------------------------------------------- --
 
 data Item = Item
-  { source_url :: Text
+  { -- | URL of item page from the shipper website.
+    source_url :: Text
+
+    -- | URL of the ebay store page of the same item.
   , ebay_url :: Text
+
+    -- | Name of the item.
   , item_name :: Text
+
+    -- | Availability of the item as fetched from the shipper website.
   , availability :: Maybe Text
+
+    -- | Availabilty of the item on the ebay store.
   , onEbay :: Maybe EbayStatus}
 
   deriving (Show, Generic)
@@ -61,7 +72,13 @@ instance FromJSON Item
 instance ToJSON Item
 
 
-updateItem :: Item -> Maybe Text -> Maybe EbayStatus -> Item
+-- | Update the value of an item with the information that has to be fetched from
+-- webpages.
+updateItem
+    :: Item -- ^ Initial item to be updated.
+    -> Maybe Text -- ^ Availablity string as scraped from the shipper webpage.
+    -> Maybe EbayStatus -- ^ Availabity status as scraped from the ebay store.
+    -> Item -- ^ Updated Item.
 updateItem item availability ebayStatus = newItem
   where
     newItem = partialItem {availability = availability}
@@ -73,8 +90,13 @@ updateItem item availability ebayStatus = newItem
 
 -- | Environment variables data type.
 data Env = Env
-  { recipients :: [Text]
+  { -- | List of email addresses of the report email recipients.
+    recipients :: [Text]
+
+    -- | Email address of the report email sender.
   , sender :: Text
+
+    -- | URL of the database endpoint returning the inital list of items.
   , dbItemsUrl :: Text }
 
   deriving (Show, Generic)

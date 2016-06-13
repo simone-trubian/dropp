@@ -73,7 +73,7 @@ main = do
     mgr <- newManager tlsManagerSettings
 
     -- Fetch pages urls from DB.
-    dbItems <- fromJust <$> (getItems mgr $ dbItemsUrl envVars)
+    dbItems <- fromJust <$> getItems mgr (dbItemsUrl envVars)
 
     -- Fetch all pages listed in the DB table.
     items <- mapM (getItemUpdate mgr) dbItems
