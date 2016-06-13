@@ -19,7 +19,6 @@ module Dropp.HTML
 
 import Dropp.DataTypes
 import Lucid
-import Data.Maybe (fromJust)
 import Safe (headMay)
 import Data.Text.Internal (Text)
 import Data.Text (pack)
@@ -27,6 +26,9 @@ import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Text.Parsec.Pos (SourceName)
 import Text.Parsec.Error (ParseError)
+import Data.Maybe
+  ( fromJust
+  , fromMaybe)
 
 import Text.XML.Cursor
   ( Cursor
@@ -116,9 +118,7 @@ renderAvailability :: Monad m => Item-> HtmlT m ()
 renderAvailability item = li_ [style_ (color content)] (toHtml content)
   where
     content :: Text
-    content = case availability item of
-        Just av -> av
-        Nothing -> "could not fetch item availability"
+    content = fromMaybe "could not fetch item availability" (availability item)
 
     color txt
       | txt == "Currently out of stock" = "color:red"
@@ -154,13 +154,16 @@ formatItemCount txt =
 --              MOCK PAGES
 -- ------------------------------------------------------------------------- --
 
+-- | Return a minimal page containing only the title and availability.
 bangGoodMockPage :: Monad m => Item -> HtmlT m ()
-bangGoodMockPage block =
+bangGoodMockPage item =
     html_ $ do
-      title_ (toHtml $ item_name block)
-      body_ (div_ [class_ "status"] (toHtml $ fromJust $ availability block))
+      title_ (toHtml $ item_name item)
+      body_ (div_ [class_ "status"] (toHtml $ fromJust $ availability item))
 
 
+-- | Return a minimal Ebay mock page containing the disclaimer string depending
+-- on the value of the EbayStatus parameter.
 ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
 ebayMockPage isOn = html_ $ do
 
@@ -183,6 +186,7 @@ ebayMockPage isOn = html_ $ do
 -- ------------------------------------------------------------------------- --
 --              SCRAPING
 -- ------------------------------------------------------------------------- --
+-- | Combine cursor to the HTML parsing function.
 scrapeBGAv :: ByteString -> Maybe Text
 scrapeBGAv = parseBangAva . makeCursor
 
@@ -203,10 +207,12 @@ parseBangAva cursor =
         child
 
 
+-- | Combine cursor to the HTML parsing function.
 scrapeEbayStatus :: ByteString -> Maybe EbayStatus
 scrapeEbayStatus = parseEbayStatus . makeCursor
 
 
+-- | Extract the status of an item on its Ebay page.
 parseEbayStatus :: Cursor -> Maybe EbayStatus
 parseEbayStatus cursor =
   case spans of
@@ -224,11 +230,6 @@ parseEbayStatus cursor =
       case content <$> (headMay $ child node) of
         Just isOffSentence-> Just Off
         Nothing -> Just On
-
-
--- | Generate an item block starting from a BangGood item page.
-makeBlock :: ByteString -> Item
-makeBlock = undefined
 
 
 -- | Generate a parsing cursor from an HTML page.
