@@ -16,10 +16,12 @@ import Data.Text.Internal (Text)
 import Safe (headMay)
 import Data.Either (isRight)
 import Data.Text (unpack)
+import Text.Printf (printf)
 import Data.Aeson (decode)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString as Bs (ByteString)
 import Control.Exception.Lifted (catch)
+import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe
   ( MaybeT
   , runMaybeT)
@@ -121,7 +123,9 @@ getHttp
 getHttp mgr url contentType function = do
     res <- catch
         (function <$> fetchHttp mgr url contentType)
-        (\(x :: HttpException)-> mzero)
+        (\(x :: HttpException)-> do
+            lift $ printf "failed to fetch %s because of %s\n" (unpack url) (show x)
+            mzero)
 
     guard (isJust res)
     return $ fromJust res
