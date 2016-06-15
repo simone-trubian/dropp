@@ -87,7 +87,7 @@ assertFormatting status color ebayStatus ebayString ebayColor =
 -- resultTemplate :: String -> String -> ByteString
 resultTemplate status color ebayStatus ebayColor = pack $
     "<li><ul style=\"list-style-type:none; margin:10px 0\">"
-    ++ "<li><a href=\"http://source.com\">Title</a></li>"
+    ++ "<li><a style=\"color:black; text-decoration:none\" href=\"http://source.com\">Title</a></li>"
 
     ++ "<li>"
     ++ "<a style=\"" ++ ebayColor ++ "\" href=\"http://ebay.com\">"

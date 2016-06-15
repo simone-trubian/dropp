@@ -73,7 +73,9 @@ formatItem :: Monad m => Item -> HtmlT m ()
 formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-         $ do li_ (a_ [href_ (source_url item)] (toHtml $ item_name item))
+         $ do li_ (a_ [href_ (source_url item), style_
+                       "color:black; text-decoration:none"]
+                   (toHtml $ item_name item))
               renderEbayStatus item
               renderAvailability item
 
