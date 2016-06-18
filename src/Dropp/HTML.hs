@@ -121,14 +121,14 @@ renderAvailability av = li_ [style_ (color av)] (toHtml $ content av)
 
     content :: Maybe Availability -> Text
     content (Just av) = pack $ show av
-    content (Nothing) = "could not fetch item availability"
+    content Nothing = "could not fetch item availability"
 
     color :: Maybe Availability -> Text
-    color (Just (Available)) = "color:green"
-    color (Just ((AvCount _))) = "color:green"
-    color (Just ((Low _))) = "color:orange"
-    color (Just (Out)) = "color:red"
-    color (Nothing) = "color:blue"
+    color (Just Available) = "color:green"
+    color (Just (AvCount _)) = "color:green"
+    color (Just (Low _)) = "color:orange"
+    color (Just Out) = "color:red"
+    color Nothing = "color:blue"
 
 
 -- ------------------------------------------------------------------------- --
@@ -140,7 +140,7 @@ bangGoodMockPage :: Monad m => Item -> HtmlT m ()
 bangGoodMockPage item =
     html_ $ do
       title_ (toHtml $ item_name item)
-      body_ (div_ [class_ "status"] (toHtml $ show $ fromJust $ availability item))
+      body_ (div_ [class_ "status"] (toHtml ("In stock, usually dispatched in 1 business day" :: String)))
 
 
 -- | Return a minimal Ebay mock page containing the disclaimer string depending
@@ -182,7 +182,7 @@ parseBangAva cursor =
 
   where
     pif = case divs of
-      Just xs -> (headMay $ content xs)
+      Just xs -> headMay $ content xs
       Nothing -> Nothing
 
     divs =
@@ -213,7 +213,7 @@ parseEbayStatus cursor =
         attributeIs "class" "msgTextAlign"
 
     isOn node =
-      case content <$> (headMay $ child node) of
+      case content <$> headMay (child node) of
         Just isOffSentence-> Just Off
         Nothing -> Just On
 

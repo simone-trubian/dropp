@@ -77,7 +77,7 @@ server = bangOK
   where
     bangOK :: Text -> EitherT ServantErr IO Item
     bangOK title =
-        return (Item "" "" title (Just "In stock, usually dispatched in 1 business day") Nothing)
+        return (Item "" "" title (Just Available) Nothing)
 
     bangJSON :: Int -> EitherT ServantErr IO JsonAv
     bangJSON availability = return (JsonAv availability)

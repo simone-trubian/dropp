@@ -7,6 +7,8 @@ import qualified Lucid as L
 import qualified Data.Text as T
 import Data.ByteString.Lazy.Internal (ByteString)
 import Data.ByteString.Lazy.Char8 (pack)
+import Data.Maybe (maybe)
+
 import Test.Tasty
   ( TestTree
   , defaultMain
@@ -30,7 +32,7 @@ email :: TestTree
 email = testGroup "Email formatting tests"
   [ testCase "Available status is formatted green - on ebay is formatted green"
       $ assertFormatting
-          "In stock, usually dispatched in 1 business day"
+          (Just Available)
           "color:green"
           (Just On)
           "on ebay"
@@ -38,7 +40,7 @@ email = testGroup "Email formatting tests"
 
   , testCase "More than five items are formatted green - on ebay is formatted green"
       $ assertFormatting
-          "Only 10 units,dispatched in 1 business day"
+          (Just (AvCount 10))
           "color:green"
           (Just On)
           "on ebay"
@@ -46,7 +48,7 @@ email = testGroup "Email formatting tests"
 
   , testCase "Less than five items are formatted orange - off ebay is formatted red"
       $ assertFormatting
-          "Only 5 units,dispatched in 1 business day"
+          (Just (Low 5))
           "color:orange"
           (Just Off)
           "off ebay"
@@ -54,7 +56,7 @@ email = testGroup "Email formatting tests"
 
   , testCase "No availability is formatted red - off ebay is formatted red"
       $ assertFormatting
-          "Currently out of stock"
+          (Just Out)
           "color:red"
           (Just Off)
           "off ebay"
@@ -62,7 +64,7 @@ email = testGroup "Email formatting tests"
 
   , testCase "Unexpected availability is formatted blue - no ebay status is formatted blue"
       $ assertFormatting
-          "Could not fetch item availability"
+          Nothing
           "color:blue"
           Nothing
           "could not fetch ebay status"
@@ -79,9 +81,9 @@ assertFormatting status color ebayStatus ebayString ebayColor =
             "http://source.com"
             "http://ebay.com"
             "Title"
-            (Just (T.pack status))
+            status
             ebayStatus))
-        (resultTemplate status color ebayString ebayColor)
+        (resultTemplate (maybe "could not fetch item availability" show status) color ebayString ebayColor)
 
 
 -- resultTemplate :: String -> String -> ByteString

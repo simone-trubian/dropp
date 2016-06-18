@@ -50,8 +50,8 @@ instance FromJSON Availability
 -- | Define the sentences used in the email report overloading the Show class.
 instance Show Availability where
     show Available = "Item available"
-    show (AvCount n) = (show n) ++ " items available"
-    show (Low n) = "Item low only " ++ (show n) ++ " pieces available"
+    show (AvCount n) = show n ++ " items available"
+    show (Low n) = "Item low only " ++ show n ++ " pieces available"
     show Out = "Item not available"
 
 
