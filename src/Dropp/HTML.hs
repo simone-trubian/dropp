@@ -7,7 +7,6 @@
 module Dropp.HTML
   ( formatOutput
   , formatItem
-  , formatItemCount
   , renderAvailability
   , renderEbayStatus
   , scrapeEbayStatus
@@ -77,7 +76,7 @@ formatItem item =
                        "color:black; text-decoration:none"]
                    (toHtml $ item_name item))
               renderEbayStatus item
-              renderAvailability item
+              renderAvailability $ availability item
 
 
 -- | Generate an HTML list item containing a colour-coded ebay status string.
@@ -116,40 +115,20 @@ renderEbayStatus item =
 --
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
-renderAvailability :: Monad m => Item-> HtmlT m ()
-renderAvailability item = li_ [style_ (color content)] (toHtml content)
+renderAvailability :: Monad m => Maybe Availability -> HtmlT m ()
+renderAvailability av = li_ [style_ (color av)] (toHtml $ content av)
   where
-    content :: Text
-    content = fromMaybe "could not fetch item availability" (availability item)
 
-    color txt
-      | txt == "Currently out of stock" = "color:red"
-      | txt == "In stock, usually dispatched in 1 business day" = "color:green"
-      | otherwise = formatItemCount txt
+    content :: Maybe Availability -> Text
+    content (Just av) = pack $ show av
+    content (Nothing) = "could not fetch item availability"
 
-
--- | Generate a styling attribute value starting from a parsed availability
--- string. The function will try to parse any number present in the string and
--- use that as  the number of items currently in stock. If the number of items
--- is > 5 the item is considered available and marked greeen. If the number of
--- items is <= 5 the items is considered "going quick" and marked orange. If
--- the parser fails the availability string is different from all expected
--- values and therefore marked blue.
-formatItemCount :: Text -> Text
-formatItemCount txt =
-  case parse parser "" txt of
-    Right str -> decideCount str
-    Left _ -> "color:blue"
-
-  where
-    -- | Parse the first occurrence of a number of any number of digits is a
-    -- string of text. The parser will stop at the first number found and fail
-    -- if no numbers are found.
-    parser = many (noneOf ['0'..'9']) >> many1 digit
-
-    decideCount str =
-      -- Check if the number of items is > 5.
-      if read str > 5 then "color:green" else "color:orange"
+    color :: Maybe Availability -> Text
+    color (Just (Available)) = "color:green"
+    color (Just ((AvCount _))) = "color:green"
+    color (Just ((Low _))) = "color:orange"
+    color (Just (Out)) = "color:red"
+    color (Nothing) = "color:blue"
 
 
 -- ------------------------------------------------------------------------- --
@@ -161,7 +140,7 @@ bangGoodMockPage :: Monad m => Item -> HtmlT m ()
 bangGoodMockPage item =
     html_ $ do
       title_ (toHtml $ item_name item)
-      body_ (div_ [class_ "status"] (toHtml $ fromJust $ availability item))
+      body_ (div_ [class_ "status"] (toHtml $ show $ fromJust $ availability item))
 
 
 -- | Return a minimal Ebay mock page containing the disclaimer string depending
@@ -189,20 +168,25 @@ ebayMockPage isOn = html_ $ do
 --              SCRAPING
 -- ------------------------------------------------------------------------- --
 -- | Combine cursor to the HTML parsing function.
-scrapeBGAv :: ByteString -> Maybe Text
+scrapeBGAv :: ByteString -> Maybe Availability
 scrapeBGAv = parseBangAva . makeCursor
 
 
 -- | Extract the availability of a BangGood item page from the cursor opened on
 -- that page.
-parseBangAva :: Cursor -> Maybe Text
+parseBangAva :: Cursor -> Maybe Availability
 parseBangAva cursor =
-  case divs of
-    Just xs -> headMay $ content xs
+  case pif of
+    Just xs -> mkAvailability xs
     Nothing -> Nothing
 
   where
-    divs = headMay $
+    pif = case divs of
+      Just xs -> (headMay $ content xs)
+      Nothing -> Nothing
+
+    divs =
+        headMay $
         cursor $//
         element "div" >=>
         attributeIs "class" "status" >=>

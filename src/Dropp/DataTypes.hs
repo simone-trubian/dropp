@@ -43,7 +43,9 @@ data Availability =
   | Low Int -- ^ Item available but the stock is nearly out.
   | Out -- ^ Item is not available.
 
-  deriving Eq
+  deriving (Eq, Generic)
+
+instance FromJSON Availability
 
 -- | Define the sentences used in the email report overloading the Show class.
 instance Show Availability where
@@ -57,9 +59,9 @@ instance Show Availability where
 -- | Exported smart constructor for the Availability data type. The function
 -- gets the scraped availability string and parses it to generates the
 -- appropriate type.
-mkAv :: Text -> Maybe Availability
+mkAvailability :: Text -> Maybe Availability
 
-mkAv txt
+mkAvailability txt
   | txt == "Currently out of stock" = Just Out
   | txt == "In stock, usually dispatched in 1 business day" = Just Available
   | otherwise = getAvCount
@@ -118,7 +120,7 @@ data Item = Item
   , item_name :: Text
 
     -- | Availability of the item as fetched from the shipper website.
-  , availability :: Maybe Text
+  , availability :: Maybe Availability
 
     -- | Availabilty of the item on the ebay store.
   , onEbay :: Maybe EbayStatus}
@@ -126,14 +128,13 @@ data Item = Item
   deriving (Show, Generic)
 
 instance FromJSON Item
-instance ToJSON Item
 
 
 -- | Update the value of an item with the information that has to be fetched from
 -- webpages.
 updateItem
     :: Item -- ^ Initial item to be updated.
-    -> Maybe Text -- ^ Availablity string as scraped from the shipper webpage.
+    -> Maybe Availability -- ^ Shipper availability data type.
     -> Maybe EbayStatus -- ^ Availabity status as scraped from the ebay store.
     -> Item -- ^ Updated Item.
 updateItem item availability ebayStatus = newItem

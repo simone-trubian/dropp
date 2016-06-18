@@ -90,7 +90,7 @@ getItems mgr url =
 getAvailability
     :: Manager -- ^Conduit HTTP manager.
     -> Text -- ^URL to be fetched.
-    -> IO (Maybe Text) -- ^IO computation returning a Maybe availabilty.
+    -> IO (Maybe Availability) -- ^IO computation returning a Maybe availabilty.
 
 getAvailability mgr url =
     runMaybeT
