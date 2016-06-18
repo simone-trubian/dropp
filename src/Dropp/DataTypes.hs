@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeFamilies #-}
 
 
 module Dropp.DataTypes where
@@ -8,6 +9,13 @@ import Data.Aeson
 import Haxl.Core (GenHaxl)
 import GHC.Generics (Generic)
 import Data.Text.Internal (Text)
+import Text.Parsec
+  ( many1
+  , many
+  , noneOf
+  , digit
+  , parse)
+
 import Control.Applicative
   ( pure
   , empty)
@@ -22,6 +30,55 @@ import Data.Hashable
   , hash)
 
 import Data.Aeson.Types (Parser)
+
+
+-- ------------------------------------------------------------------------- --
+--              ITEM AVAILABILITY
+-- ------------------------------------------------------------------------- --
+
+-- | Wrapper for a BangGood availability as obtained from the item page.
+data Availability =
+    Available -- ^ Item is available in an unspecified quantity.
+  | AvCount Int -- ^ Item is available and the item count is given.
+  | Low Int -- ^ Item available but the stock is nearly out.
+  | Out -- ^ Item is not available.
+
+  deriving Eq
+
+-- | Define the sentences used in the email report overloading the Show class.
+instance Show Availability where
+    show Available = "Item available"
+    show (AvCount n) = (show n) ++ " items available"
+    show (Low n) = "Item low only " ++ (show n) ++ " pieces available"
+    show Out = "Item not available"
+
+
+
+-- | Exported smart constructor for the Availability data type. The function
+-- gets the scraped availability string and parses it to generates the
+-- appropriate type.
+mkAv :: Text -> Maybe Availability
+
+mkAv txt
+  | txt == "Currently out of stock" = Just Out
+  | txt == "In stock, usually dispatched in 1 business day" = Just Available
+  | otherwise = getAvCount
+
+  where
+    -- | Parse the number in the string and return the right type.
+    getAvCount =
+      case parse parser "" txt of
+        Right str -> decideCount str
+        Left _ -> Nothing
+
+    -- | Parse the first occurrence of a number of an arbitrary number of digits
+    -- in a string of text. The parser will return the first number found and fail
+    -- if no numbers are found.
+    parser = many (noneOf ['0'..'9']) >> many1 digit
+
+    -- | Check if the number of items is > 5.
+    decideCount str =
+      if read str > 5 then Just (AvCount (read str)) else Just (Low (read str))
 
 
 -- ------------------------------------------------------------------------- --
