@@ -6,8 +6,9 @@ import Dropp.DataTypes
 import qualified Lucid as L
 import qualified Data.Text as T
 import Data.ByteString.Lazy.Internal (ByteString)
-import Data.ByteString.Lazy.Char8 (pack)
 import Data.Maybe (maybe)
+import Data.ByteString.Lazy.Char8 (pack)
+import Data.Text (unpack)
 
 import Test.Tasty
   ( TestTree
@@ -31,7 +32,7 @@ tests = testGroup "Tests" [email]
 email :: TestTree
 email = testGroup "Email formatting tests"
   [ testCase "Available status is formatted green - on ebay is formatted green"
-      $ assertFormatting
+    $ assertFormatting
           (Just Available)
           "color:green"
           (Just On)
@@ -67,7 +68,7 @@ email = testGroup "Email formatting tests"
           Nothing
           "color:blue"
           Nothing
-          "could not fetch ebay status"
+          "could not fetch update"
           "color:blue"
   ]
 
@@ -83,7 +84,7 @@ assertFormatting status color ebayStatus ebayString ebayColor =
             "Title"
             status
             ebayStatus))
-        (resultTemplate (maybe "could not fetch item availability" show status) color ebayString ebayColor)
+        (resultTemplate (unpack $ message status) color ebayString ebayColor)
 
 
 -- resultTemplate :: String -> String -> ByteString

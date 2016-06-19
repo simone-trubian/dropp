@@ -83,9 +83,9 @@ data Availability =
 -- | Define the sentences used in the email report overloading the ToHTML class.
 instance ToHTML Availability where
     message Available = "Item available"
-    message (AvCount n) = (pack $ show n) `append` " items available"
+    message (AvCount n) = pack (show n) `append` " items available"
     message (Low n) = "Item low only "
-                      `append` (pack $ show n)
+                      `append` pack (show n)
                       `append` " pieces available"
     message Out = "Item not available"
 

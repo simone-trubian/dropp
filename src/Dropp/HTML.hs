@@ -91,18 +91,9 @@ formatItem item =
 renderEbayStatus :: Monad m => Item -> HtmlT m ()
 renderEbayStatus item =
     li_
-        (a_ [href_ (ebay_url item), style_ color] (toHtml content))
-  where
-    content :: Text
-    content = case onEbay item of
-        Just On -> "on ebay"
-        Just Off -> "off ebay"
-        Nothing -> "could not fetch ebay status"
-
-    color = case onEbay item of
-        Just On -> "color:green"
-        Just Off -> "color:red"
-        Nothing -> "color:blue"
+        (a_
+         [href_ (ebay_url item), style_ (color $ onEbay item)]
+         (toHtml (message $ onEbay item)))
 
 
 -- | Generate an HTML list item containing a colour-coded availabilty string.
@@ -116,19 +107,7 @@ renderEbayStatus item =
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
 renderAvailability :: Monad m => Maybe Availability -> HtmlT m ()
-renderAvailability av = li_ [style_ (color av)] (toHtml $ content av)
-  where
-
-    content :: Maybe Availability -> Text
-    content (Just av) = pack $ show av
-    content Nothing = "could not fetch item availability"
-
-    color :: Maybe Availability -> Text
-    color (Just Available) = "color:green"
-    color (Just (AvCount _)) = "color:green"
-    color (Just (Low _)) = "color:orange"
-    color (Just Out) = "color:red"
-    color Nothing = "color:blue"
+renderAvailability av = li_ [style_ (color av)] (toHtml $ message av)
 
 
 -- ------------------------------------------------------------------------- --
