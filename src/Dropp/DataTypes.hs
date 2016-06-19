@@ -9,6 +9,7 @@ import Data.Aeson
 import Haxl.Core (GenHaxl)
 import GHC.Generics (Generic)
 import Data.Text.Internal (Text)
+import Data.ByteString.Lazy.Internal (ByteString)
 import Text.Parsec
   ( many1
   , many
@@ -23,6 +24,7 @@ import Control.Applicative
 import Data.Text
   ( pack
   , unpack
+  , append
   , takeEnd)
 
 import Data.Hashable
@@ -30,6 +32,39 @@ import Data.Hashable
   , hash)
 
 import Data.Aeson.Types (Parser)
+
+
+-- ------------------------------------------------------------------------- --
+--              HTML INTERFACE DEFINITION
+-- ------------------------------------------------------------------------- --
+
+-- | Get a Dropp data structure from a scraped page.
+class FromHTML a where
+    -- | Defines a common method for all scraped data types that goes from the
+    -- scraped webpage body to a Maybe data type. This method in meant to
+    -- be similar to the decode function used for JSON and YAML deserialisation.
+    decodeHTML :: ByteString -> Maybe a
+
+
+-- | Go from a Dropp data structure to a Text that can be used to generate HTML.
+class ToHTML a where
+    -- | Generate the string shown in the report email for the specific type.
+    message :: a -> Text
+    -- | Generate the color attribute used in the report email.
+    color :: a -> Text
+
+
+-- ------------------------------------------------------------------------- --
+--              MAYBE OVERLOADING
+-- ------------------------------------------------------------------------- --
+
+-- | All Dropp scraped data types are returned boxed in Maybe.
+instance (ToHTML a) => ToHTML (Maybe a) where
+    message (Just a) = message a
+    message Nothing = "could not fetch update"
+
+    color (Just a) = color a
+    color Nothing = "color:blue"
 
 
 -- ------------------------------------------------------------------------- --
@@ -43,16 +78,23 @@ data Availability =
   | Low Int -- ^ Item available but the stock is nearly out.
   | Out -- ^ Item is not available.
 
-  deriving (Eq, Generic)
+  deriving (Show, Eq, Generic)
+
+-- | Define the sentences used in the email report overloading the ToHTML class.
+instance ToHTML Availability where
+    message Available = "Item available"
+    message (AvCount n) = (pack $ show n) `append` " items available"
+    message (Low n) = "Item low only "
+                      `append` (pack $ show n)
+                      `append` " pieces available"
+    message Out = "Item not available"
+
+    color Available = "color:green"
+    color (AvCount _) = "color:green"
+    color (Low _) = "color:orange"
+    color Out = "color:red"
 
 instance FromJSON Availability
-
--- | Define the sentences used in the email report overloading the Show class.
-instance Show Availability where
-    show Available = "Item available"
-    show (AvCount n) = show n ++ " items available"
-    show (Low n) = "Item low only " ++ show n ++ " pieces available"
-    show Out = "Item not available"
 
 
 
@@ -94,6 +136,15 @@ data EbayStatus =
 
   deriving (Show, Ord, Eq, Generic)
 
+-- | Define the sentences used in the email report overloading the ToHTML class.
+instance ToHTML EbayStatus where
+    message On = "on ebay"
+    message Off = "off ebay"
+
+    color On = "color:green"
+    color Off = "color:red"
+
+-- | Overloaded instance (Still unused) for decoding JSON to the data type.
 instance FromJSON EbayStatus where
     parseJSON (String s) = case s of
         "on" -> pure On
@@ -101,8 +152,6 @@ instance FromJSON EbayStatus where
         _ -> empty
 
     parseJSON _ = empty
-
-instance ToJSON EbayStatus
 
 
 -- ------------------------------------------------------------------------- --
@@ -160,7 +209,6 @@ data Env = Env
   deriving (Show, Generic)
 
 instance FromJSON Env
-instance ToJSON Env
 
 
 -- | Provisional data structure as captured from the JSON object of variable items.
