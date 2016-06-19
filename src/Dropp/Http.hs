@@ -94,7 +94,7 @@ getAvailability
 
 getAvailability mgr url =
     runMaybeT
-    $ getHttp mgr url "text/html" scrapeBGAv
+    $ getHttp mgr url "text/html" decodeHTML
 
 
 
@@ -106,7 +106,7 @@ getEbayStatus
 
 getEbayStatus mgr url =
     runMaybeT
-    $ getHttp mgr url "text/html" scrapeEbayStatus
+    $ getHttp mgr url "text/html" decodeHTML
 
 
 

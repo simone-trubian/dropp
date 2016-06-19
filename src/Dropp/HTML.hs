@@ -9,8 +9,6 @@ module Dropp.HTML
   , formatItem
   , renderAvailability
   , renderEbayStatus
-  , scrapeEbayStatus
-  , scrapeBGAv
   , bangGoodMockPage
   , ebayMockPage)
   where
@@ -146,9 +144,16 @@ ebayMockPage isOn = html_ $ do
 -- ------------------------------------------------------------------------- --
 --              SCRAPING
 -- ------------------------------------------------------------------------- --
--- | Combine cursor to the HTML parsing function.
-scrapeBGAv :: ByteString -> Maybe Availability
-scrapeBGAv = parseBangAva . makeCursor
+-- | Implement the FromHTML interface by combining a cursor to the HTML
+-- parsing function.
+instance FromHTML Availability where
+    decodeHTML = parseBangAva . makeCursor
+
+
+-- | Implement the FromHTML interface by combining a cursor to the HTML
+-- parsing function.
+instance FromHTML EbayStatus where
+    decodeHTML = parseEbayStatus . makeCursor
 
 
 -- | Extract the availability of a BangGood item page from the cursor opened on
@@ -171,10 +176,6 @@ parseBangAva cursor =
         attributeIs "class" "status" >=>
         child
 
-
--- | Combine cursor to the HTML parsing function.
-scrapeEbayStatus :: ByteString -> Maybe EbayStatus
-scrapeEbayStatus = parseEbayStatus . makeCursor
 
 
 -- | Extract the status of an item on its Ebay page.
