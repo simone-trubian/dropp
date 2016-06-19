@@ -49,8 +49,7 @@ import Network.AWS.SES
   , cData
   , bHTML
   , destination
-  , body
-  , message)
+  , body)
 
 import Control.Lens
   ( (&)
@@ -120,6 +119,6 @@ makeEmail :: Env -> Text -> Text -> SendEmail
 makeEmail envVars subText payload = sendEmail (sender envVars) dest msg
   where
     dest = destination & dToAddresses .~ recipients envVars
-    msg = message subject body'
+    msg = SES.message subject body'
     subject = SES.content "" & cData .~ subText
     body' = body & bHTML .~ Just (SES.content payload)

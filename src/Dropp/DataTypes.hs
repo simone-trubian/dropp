@@ -172,7 +172,7 @@ data Item = Item
   , availability :: Maybe Availability
 
     -- | Availabilty of the item on the ebay store.
-  , onEbay :: Maybe EbayStatus}
+  , ebayStatus :: Maybe EbayStatus}
 
   deriving (Show, Generic)
 
@@ -186,10 +186,10 @@ updateItem
     -> Maybe Availability -- ^ Shipper availability data type.
     -> Maybe EbayStatus -- ^ Availabity status as scraped from the ebay store.
     -> Item -- ^ Updated Item.
-updateItem item availability ebayStatus = newItem
+updateItem item availability status = newItem
   where
     newItem = partialItem {availability = availability}
-    partialItem = item {onEbay = ebayStatus}
+    partialItem = item {ebayStatus = status}
 
 -- ------------------------------------------------------------------------- --
 --              ENVIRONMENT

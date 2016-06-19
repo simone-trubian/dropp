@@ -90,8 +90,8 @@ renderEbayStatus :: Monad m => Item -> HtmlT m ()
 renderEbayStatus item =
     li_
         (a_
-         [href_ (ebay_url item), style_ (color $ onEbay item)]
-         (toHtml (message $ onEbay item)))
+         [href_ (ebay_url item), style_ (color $ ebayStatus item)]
+         (toHtml (message $ ebayStatus item)))
 
 
 -- | Generate an HTML list item containing a colour-coded availabilty string.
