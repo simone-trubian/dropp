@@ -77,7 +77,7 @@ getItemUpdate mgr item =
 -- | Perform an HTTP GET request to fetch a list of items records.
 getItems
     :: Manager -- ^Conduit HTTP manager.
-    -> Text -- ^URL to be fetched.
+    -> URL -- ^URL to be fetched.
     -> IO (Maybe [Item]) -- ^IO action containing a Maybe list of items.
 
 getItems mgr url =
@@ -89,7 +89,7 @@ getItems mgr url =
 -- | Perform an HTTP GET request to fetch the source availability of the item.
 getAvailability
     :: Manager -- ^Conduit HTTP manager.
-    -> Text -- ^URL to be fetched.
+    -> URL -- ^URL to be fetched.
     -> IO (Maybe Availability) -- ^IO computation returning a Maybe availabilty.
 
 getAvailability mgr url =
@@ -101,7 +101,7 @@ getAvailability mgr url =
 -- | Perform an HTTP GET request to fetch the source availability of the item.
 getEbayStatus
     :: Manager -- ^Conduit HTTP manager.
-    -> Text -- ^URL to be fetched.
+    -> URL -- ^URL to be fetched.
     -> IO (Maybe EbayStatus) -- ^IO computation returning a Maybe Ebay status.
 
 getEbayStatus mgr url =
@@ -115,7 +115,7 @@ getEbayStatus mgr url =
 -- into the desired data type.
 getHttp
     :: Manager -- ^Conduit HTTP manager.
-    -> Text -- ^URL to be fetched.
+    -> URL -- ^URL to be fetched.
     -> String -- ^Content type required by the convesion function.
     -> (ByteString -> Maybe a) -- ^Conversion function.
     -> MaybeIO a -- ^Converted value wrapped in a MaybeT IO computation.
@@ -136,7 +136,7 @@ getHttp mgr url contentType function = do
 -- matches the one requested.
 fetchHttp
     :: Manager -- ^Conduit HTTP manager.
-    -> Text -- ^URL to be fetched.
+    -> URL -- ^URL to be fetched.
     -> String -- ^Content type string.
     -> MaybeIO ByteString -- ^Request body response wrapped in a MaybeT IO.
 

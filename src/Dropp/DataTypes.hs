@@ -58,7 +58,7 @@ class ToHTML a where
 --              MAYBE OVERLOADING
 -- ------------------------------------------------------------------------- --
 
--- | All Dropp scraped data types are returned boxed in Maybe.
+-- | All Dropp scraped data types are returned boxed in a Maybe value.
 instance (ToHTML a) => ToHTML (Maybe a) where
     message (Just a) = message a
     message Nothing = "could not fetch update"
@@ -160,10 +160,10 @@ instance FromJSON EbayStatus where
 
 data Item = Item
   { -- | URL of item page from the shipper website.
-    source_url :: Text
+    source_url :: URL
 
     -- | URL of the ebay store page of the same item.
-  , ebay_url :: Text
+  , ebay_url :: URL
 
     -- | Name of the item.
   , item_name :: Text
@@ -179,8 +179,8 @@ data Item = Item
 instance FromJSON Item
 
 
--- | Update the value of an item with the information that has to be fetched from
--- webpages.
+-- | Update the value of an item with the information that has to be fetched
+-- from webpages.
 updateItem
     :: Item -- ^ Initial item to be updated.
     -> Maybe Availability -- ^ Shipper availability data type.
@@ -190,6 +190,7 @@ updateItem item availability status = newItem
   where
     newItem = partialItem {availability = availability}
     partialItem = item {ebayStatus = status}
+
 
 -- ------------------------------------------------------------------------- --
 --              ENVIRONMENT
@@ -210,6 +211,12 @@ data Env = Env
 
 instance FromJSON Env
 
+
+-- ------------------------------------------------------------------------- --
+--              TYPE ALIASES
+-- ------------------------------------------------------------------------- --
+
+type URL = Text
 
 -- | Provisional data structure as captured from the JSON object of variable items.
 data JsonAv = JsonAv {itemCount :: Int}
