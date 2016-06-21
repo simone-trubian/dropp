@@ -166,7 +166,7 @@ getMimeType
 getMimeType parseHeader =
   case parseResults of
     (Right _ : _) -> Just TextHtml
-    [_, Right _, _] -> Just ApplicationJson
+    [_, Right _] -> Just ApplicationJson
     _ -> Nothing
 
   where
