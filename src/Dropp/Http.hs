@@ -17,11 +17,14 @@ import Safe (headMay)
 import Data.Either (isRight)
 import Data.Text (unpack)
 import Text.Printf (printf)
-import Data.Aeson (decode)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString as Bs (ByteString)
 import Control.Exception.Lifted (catch)
 import Control.Monad.Trans (lift)
+import Data.Aeson
+  ( FromJSON
+  , decode)
+
 import Control.Monad.Trans.Maybe
   ( MaybeT
   , runMaybeT)
@@ -80,9 +83,7 @@ getItems
     -> URL -- ^URL to be fetched.
     -> IO (Maybe [Item]) -- ^IO action containing a Maybe list of items.
 
-getItems mgr url =
-    runMaybeT
-    $ getHttp mgr url "application/json" decode
+getItems mgr url = runMaybeT $ fetchHttp mgr url
 
 
 
@@ -92,9 +93,7 @@ getAvailability
     -> URL -- ^URL to be fetched.
     -> IO (Maybe Availability) -- ^IO computation returning a Maybe availabilty.
 
-getAvailability mgr url =
-    runMaybeT
-    $ getHttp mgr url "text/html" decodeHTML
+getAvailability mgr url = runMaybeT $ fetchHttp mgr url
 
 
 
@@ -104,66 +103,45 @@ getEbayStatus
     -> URL -- ^URL to be fetched.
     -> IO (Maybe EbayStatus) -- ^IO computation returning a Maybe Ebay status.
 
-getEbayStatus mgr url =
-    runMaybeT
-    $ getHttp mgr url "text/html" decodeHTML
-
-
-
--- | Main polymorphic interface function called by all the exported API
--- function to perform the HTTP call and convert the returned reply body
--- into the desired data type.
-getHttp
-    :: Manager -- ^Conduit HTTP manager.
-    -> URL -- ^URL to be fetched.
-    -> String -- ^Content type required by the convesion function.
-    -> (ByteString -> Maybe a) -- ^Conversion function.
-    -> MaybeIO a -- ^Converted value wrapped in a MaybeT IO computation.
-
-getHttp mgr url contentType function = do
-    res <- catch
-        (function <$> fetchHttp mgr url contentType)
-        (\(x :: HttpException)-> do
-            lift $ printf "failed to fetch %s because of %s\n" (unpack url) (show x)
-            mzero)
-
-    guard (isJust res)
-    return $ fromJust res
+getEbayStatus mgr url = runMaybeT $ fetchHttp mgr url
 
 
 
 -- | Perform the HTTP call and return a response body if the content type
 -- matches the one requested.
 fetchHttp
-    :: Manager -- ^Conduit HTTP manager.
+    :: (FromJSON a, FromHTML a)
+    => Manager -- ^Conduit HTTP manager.
     -> URL -- ^URL to be fetched.
-    -> String -- ^Content type string.
-    -> MaybeIO ByteString -- ^Request body response wrapped in a MaybeT IO.
+    -> MaybeIO a -- ^Converted value wrapped in a MaybeT IO computation.
 
-fetchHttp manager url demandedCType = do
+fetchHttp manager url = do
     request <- parseUrl $ unpack url
-    response <- httpLbs request manager
+    response <- catch
+        (httpLbs request manager)
+        (\(x :: HttpException)-> do
+            lift $ printf "failed to fetch %s because of %s\n" (unpack url) (show x)
+            mzero)
 
     -- Extract content type from the response and fail if not found.
     let responseCType = getContentType $ responseHeaders response
     guard (isJust responseCType)
 
     -- Check if the content types match and fail otherwise.
-    let parsedCType = parseContentType (fromJust responseCType) demandedCType
-    guard (isRight parsedCType)
+    let mimeType = getMimeType (parseContentType $ fromJust responseCType)
+    guard (isJust mimeType)
 
-    return (responseBody response)
+    -- Return the wanted data type using the right decoding function.
+    case fromJust mimeType of
+       TextHtml -> do
+           let decodedType = decodeHTML $ responseBody response
+           guard (isJust decodedType)
+           return $ fromJust decodedType
 
-
-
--- | Check if the content type of the response matches the one requested.
-parseContentType
-    :: Bs.ByteString -- ^ Value of the content type found in the request.
-    -> String -- ^Content type requested by the calling function.
-    -> Either ParseError String -- ^Parsing result.
-
-parseContentType responseCType demandedCType =
-    parse (string demandedCType) "" responseCType
+       _ -> do
+           let decodedType = decode $ responseBody response
+           guard (isJust decodedType)
+           return $ fromJust decodedType
 
 
 
@@ -176,3 +154,32 @@ getContentType headers = snd <$> cType headers
   where
     cType :: ResponseHeaders -> Maybe Header
     cType = headMay . filter (\header -> fst header == hContentType)
+
+
+
+-- | Extract content type from the list of header elements.
+getMimeType
+    -- | Function that maps a mime type to its parsed value.
+    :: (String -> Either ParseError String)
+    -> Maybe MimeType -- ^ Value of the content type if found.
+
+getMimeType parseHeader =
+  case parseResults of
+    (Right _ : _) -> Just TextHtml
+    [_, Right _, _] -> Just ApplicationJson
+    _ -> Nothing
+
+  where
+    parseResults :: [Either ParseError String]
+    parseResults = map parseHeader ["text/html", "application/json"]
+
+
+
+-- | Check if the content type of the response matches the one requested.
+parseContentType
+    :: Bs.ByteString -- ^ Value of the content type found in the request.
+    -> String -- ^Content type requested by the calling function.
+    -> Either ParseError String -- ^Parsing result.
+
+parseContentType responseCType demandedCType =
+    parse (string demandedCType) "" responseCType

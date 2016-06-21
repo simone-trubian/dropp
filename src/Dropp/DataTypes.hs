@@ -55,7 +55,7 @@ class ToHTML a where
 
 
 -- ------------------------------------------------------------------------- --
---              MAYBE OVERLOADING
+--              BASE CLASSES OVERLOADING
 -- ------------------------------------------------------------------------- --
 
 -- | All Dropp scraped data types are returned boxed in a Maybe value.
@@ -65,6 +65,14 @@ instance (ToHTML a) => ToHTML (Maybe a) where
 
     color (Just a) = color a
     color Nothing = "color:blue"
+
+
+-- | Dummy implementation of a list of data types to be converted from HTML. This
+-- implementation is semantically nonsense, because there is no such thing as a
+-- list of HTML pages. However it is necessary to type-check the `fetchHttp`
+-- function.
+instance (FromHTML a) => FromHTML [a] where
+    decodeHTML _ = Nothing
 
 
 -- ------------------------------------------------------------------------- --
@@ -80,6 +88,7 @@ data Availability =
 
   deriving (Show, Eq, Generic)
 
+
 -- | Define the sentences used in the email report overloading the ToHTML class.
 instance ToHTML Availability where
     message Available = "Item available"
@@ -94,8 +103,8 @@ instance ToHTML Availability where
     color (Low _) = "color:orange"
     color Out = "color:red"
 
-instance FromJSON Availability
 
+instance FromJSON Availability
 
 
 -- | Exported smart constructor for the Availability data type. The function
@@ -116,8 +125,8 @@ mkAvailability txt
         Left _ -> Nothing
 
     -- | Parse the first occurrence of a number of an arbitrary number of digits
-    -- in a string of text. The parser will return the first number found and fail
-    -- if no numbers are found.
+    -- in a string of text. The parser will return the first number found and
+    -- fail if no numbers are found.
     parser = many (noneOf ['0'..'9']) >> many1 digit
 
     -- | Check if the number of items is > 5.
@@ -136,6 +145,7 @@ data EbayStatus =
 
   deriving (Show, Ord, Eq, Generic)
 
+
 -- | Define the sentences used in the email report overloading the ToHTML class.
 instance ToHTML EbayStatus where
     message On = "on ebay"
@@ -143,6 +153,7 @@ instance ToHTML EbayStatus where
 
     color On = "color:green"
     color Off = "color:red"
+
 
 -- | Overloaded instance (Still unused) for decoding JSON to the data type.
 instance FromJSON EbayStatus where
@@ -175,6 +186,14 @@ data Item = Item
   , ebayStatus :: Maybe EbayStatus}
 
   deriving (Show, Generic)
+
+
+-- | Dummy implementation of the type class. This boilerplate in rendered
+-- necessary to allow type-checking of the `fetchHttp` function, even though
+-- trying to parse an Item from a HTML page is considered an error.
+instance FromHTML Item where
+    decodeHTML _ = Nothing
+
 
 instance FromJSON Item
 
@@ -210,6 +229,16 @@ data Env = Env
   deriving (Show, Generic)
 
 instance FromJSON Env
+
+
+-- ------------------------------------------------------------------------- --
+--              TYPE ALIASES
+-- ------------------------------------------------------------------------- --
+
+-- | Data representing the content type of an HTTP response.
+data MimeType =
+    TextHtml -- ^ HTML page.
+  | ApplicationJson -- ^ JSON object.
 
 
 -- ------------------------------------------------------------------------- --
