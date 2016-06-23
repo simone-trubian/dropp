@@ -35,7 +35,7 @@ let
 in
 pkgs.stdenv.mkDerivation {
   name = "dropp";
-  version = "0.5.3.1";
+  version = "0.5.3.2";
   buildInputs = [
     cabal
     ghc
