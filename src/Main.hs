@@ -8,12 +8,15 @@ import qualified Data.ByteString as By
 import Data.Yaml (decode)
 import System.Environment (getArgs)
 import Data.Maybe (fromJust)
-import Data.Text (pack)
 import Data.Text.Internal (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
 import Control.Applicative ((<$>))
+import Data.Text
+  ( pack
+  , unpack)
+
 import Network.HTTP.Conduit
   ( newManager
   , tlsManagerSettings)
@@ -44,7 +47,6 @@ import Network.AWS
 import qualified Network.AWS.SES as SES
 import Network.AWS.SES
   ( SendEmail
-  , sendEmail
   , dToAddresses
   , cData
   , bHTML
@@ -65,14 +67,14 @@ main = do
 
     -- Read configuration file.
     [filePath] <- getArgs
-    vars <- decode <$> By.readFile filePath :: IO (Maybe Env)
-    let envVars = fromJust vars
+    vars <- decode <$> By.readFile filePath :: IO (Maybe DroppEnv)
+    let droppEnv = fromJust vars
 
     -- Create connection manager
     mgr <- newManager tlsManagerSettings
 
     -- Fetch pages urls from DB.
-    dbItems <- fromJust <$> getItems mgr (dbItemsUrl envVars)
+    dbItems <- fromJust <$> getItems mgr (dbItemsUrl droppEnv)
 
     -- Fetch all pages listed in the DB table.
     items <- mapM (getItemUpdate mgr) dbItems
@@ -87,18 +89,25 @@ main = do
     let bodyText = toStrict $ decodeUtf8 $ formatOutput items
 
     -- Generate full report email.
-    let email = makeEmail envVars subText bodyText
+    let email = makeEmail droppEnv subText bodyText
 
-    -- Generate AWS environment and insantiate logger.
-    env <- newEnv Ireland Discover
-    logger <- newLogger Debug stdout
+    if sendEmail droppEnv
+      then do
 
-    -- Send report email.
-    _ <- runResourceT . runAWS
-        (env & envLogger .~ logger)
-        $ send email
+        -- Generate AWS environment and insantiate logger.
+        env <- newEnv Ireland Discover
+        logger <- newLogger Debug stdout
 
-    return ()
+        -- Send report email.
+        _ <- runResourceT . runAWS
+            (env & envLogger .~ logger)
+            $ send email
+
+        return ()
+
+      else
+        writeFile (emailDumpFilePath droppEnv) (unpack bodyText)
+
 
 
 -- | Generate a string containing a local timestamp in a human readable format.
@@ -115,10 +124,10 @@ formatTimeStamp utcTime = formatTime defaultTimeLocale format cestTime
 
 
 -- | Generate a list of emails to be sent.
-makeEmail :: Env -> Text -> Text -> SendEmail
-makeEmail envVars subText payload = sendEmail (sender envVars) dest msg
+makeEmail :: DroppEnv -> Text -> Text -> SendEmail
+makeEmail droppEnv subText payload = SES.sendEmail (sender droppEnv) dest msg
   where
-    dest = destination & dToAddresses .~ recipients envVars
+    dest = destination & dToAddresses .~ recipients droppEnv
     msg = SES.message subject body'
     subject = SES.content "" & cData .~ subText
     body' = body & bHTML .~ Just (SES.content payload)

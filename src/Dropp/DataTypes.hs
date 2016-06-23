@@ -216,7 +216,7 @@ updateItem item availability status = newItem
 -- ------------------------------------------------------------------------- --
 
 -- | Environment variables data type.
-data Env = Env
+data DroppEnv = Env
   { -- | List of email addresses of the report email recipients.
     recipients :: [Text]
 
@@ -224,11 +224,19 @@ data Env = Env
   , sender :: Text
 
     -- | URL of the database endpoint returning the inital list of items.
-  , dbItemsUrl :: Text }
+  , dbItemsUrl :: Text
+
+    -- | Flag that allows sending the report email. If false the email body is
+    -- dumped to a file, set to False for testing and True for production.
+  , sendEmail :: Bool
+
+    -- | Relative file path of the email dump file. This is not to be used in
+    -- production but for testing only.
+  , emailDumpFilePath :: String}
 
   deriving (Show, Generic)
 
-instance FromJSON Env
+instance FromJSON DroppEnv
 
 
 -- ------------------------------------------------------------------------- --
