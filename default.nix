@@ -24,10 +24,14 @@ let
     yaml
     safe
 
-    # Testing
+    # Development tools
     hlint
+    stylish-haskell
+    hasktags
+    ghc-mod
     tasty
     tasty-hunit
+    hasktags
 
     # DB
     postgrest
