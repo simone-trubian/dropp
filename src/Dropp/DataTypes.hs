@@ -6,10 +6,10 @@ module Dropp.DataTypes where
 
 
 import Data.Aeson
-import Haxl.Core (GenHaxl)
 import GHC.Generics (Generic)
 import Data.Text.Internal (Text)
 import Data.ByteString.Lazy.Internal (ByteString)
+import Control.Applicative (empty)
 import Text.Parsec
   ( many1
   , many
@@ -17,21 +17,9 @@ import Text.Parsec
   , digit
   , parse)
 
-import Control.Applicative
-  ( pure
-  , empty)
-
 import Data.Text
   ( pack
-  , unpack
-  , append
-  , takeEnd)
-
-import Data.Hashable
-  ( Hashable
-  , hash)
-
-import Data.Aeson.Types (Parser)
+  , append)
 
 
 -- ------------------------------------------------------------------------- --
@@ -52,6 +40,10 @@ class ToHTML a where
     message :: a -> Text
     -- | Generate the color attribute used in the report email.
     color :: a -> Text
+    -- | Generate the sentence that has to be scraped from the original HTML
+    -- page to generate the data type. This method is used in generating mock
+    -- pages.
+    mockSentence :: a -> Text
 
 
 -- ------------------------------------------------------------------------- --
@@ -66,11 +58,16 @@ instance (ToHTML a) => ToHTML (Maybe a) where
     color (Just a) = color a
     color Nothing = "color:blue"
 
+    -- | The implementation of this method is in practice useless.
+    mockSentence (Just a) = mockSentence a
+    mockSentence Nothing = ""
 
--- | Dummy implementation of a list of data types to be converted from HTML. This
--- implementation is semantically nonsense, because there is no such thing as a
--- list of HTML pages. However it is necessary to type-check the `fetchHttp`
--- function.
+
+-- | Dummy implementation of a list of data types to be converted from HTML.
+-- This implementation is semantically nonsense, because there is no such thing
+-- as a list of HTML pages. However it is necessary to type-check the
+-- `fetchHttp` function.
+
 instance (FromHTML a) => FromHTML [a] where
     decodeHTML _ = Nothing
 
@@ -103,6 +100,10 @@ instance ToHTML Availability where
     color (Low _) = "color:orange"
     color Out = "color:red"
 
+    mockSentence Available = ""
+    mockSentence (AvCount _) = ""
+    mockSentence (Low _) = ""
+    mockSentence Out = "Currently out of stock"
 
 instance FromJSON Availability
 
@@ -131,7 +132,10 @@ mkAvailability txt
 
     -- | Check if the number of items is > 5.
     decideCount str =
-      if read str > 5 then Just (AvCount (read str)) else Just (Low (read str))
+        if read str > threshold then Just (AvCount (read str)) else Just (Low (read str))
+      where
+        threshold :: Int
+        threshold = 5
 
 
 -- ------------------------------------------------------------------------- --
@@ -153,6 +157,9 @@ instance ToHTML EbayStatus where
 
     color On = "color:green"
     color Off = "color:red"
+
+    mockSentence On = ""
+    mockSentence Off = "Questa inserzione è stata chiusa dal venditore perché l'oggetto non è più disponibile."
 
 
 -- | Overloaded instance (Still unused) for decoding JSON to the data type.
@@ -205,9 +212,9 @@ updateItem
     -> Maybe Availability -- ^ Shipper availability data type.
     -> Maybe EbayStatus -- ^ Availabity status as scraped from the ebay store.
     -> Item -- ^ Updated Item.
-updateItem item availability status = newItem
+updateItem item av status = newItem
   where
-    newItem = partialItem {availability = availability}
+    newItem = partialItem {availability = av}
     partialItem = item {ebayStatus = status}
 
 

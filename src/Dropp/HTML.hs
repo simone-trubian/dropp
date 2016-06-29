@@ -17,33 +17,18 @@ module Dropp.HTML
 import Dropp.DataTypes
 import Lucid
 import Safe (headMay)
-import Data.Text.Internal (Text)
-import Data.Text (pack)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
-import Text.Parsec.Pos (SourceName)
-import Text.Parsec.Error (ParseError)
-import Data.Maybe
-  ( fromJust
-  , fromMaybe)
 
 import Text.XML.Cursor
   ( Cursor
   , ($//)
-  , ($|)
   , (>=>)
   , attributeIs
   , fromDocument
   , element
   , content
   , child)
-
-import Text.Parsec
-  ( many1
-  , many
-  , noneOf
-  , digit
-  , parse)
 
 
 -- ------------------------------------------------------------------------- --
@@ -117,27 +102,18 @@ bangGoodMockPage :: Monad m => Item -> HtmlT m ()
 bangGoodMockPage item =
     html_ $ do
       title_ (toHtml $ item_name item)
-      body_ (div_ [class_ "status"] (toHtml ("In stock, usually dispatched in 1 business day" :: String)))
+      body_ (div_ [class_ "status"] (toHtml (mockSentence $ availability item)))
 
 
 -- | Return a minimal Ebay mock page containing the disclaimer string depending
 -- on the value of the EbayStatus parameter.
-ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
-ebayMockPage isOn = html_ $ do
-
-    let banner = span_ [class_ "statusLeftContent"]
-          $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
-            $ toHtml isOffSentence
-
-    let emptyBanner = span_ [class_ "statusLeftContent"]
-          $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
-            $ toHtml ("" :: String)
-
-    let content = case isOn of
-          On -> banner
-          Off -> emptyBanner
-
-    body_ content
+ebayMockPage :: Monad m => Item -> HtmlT m ()
+ebayMockPage item =
+  html_
+    $ body_
+      $ span_ [class_ "statusLeftContent"]
+        $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
+        (toHtml $ mockSentence (ebayStatus item))
 
 
 
@@ -197,10 +173,11 @@ parseEbayStatus cursor =
         Just isOffSentence-> Just Off
         Nothing -> Just On
 
+    isOffSentence :: String
+    isOffSentence = "Questa inserzione è stata chiusa dal venditore perché "
+                    ++ "l'oggetto non è più disponibile."
+
 
 -- | Generate a parsing cursor from an HTML page.
 makeCursor :: ByteString -> Cursor
 makeCursor = fromDocument . parseLBS
-
-
-isOffSentence = "Questa inserzione è stata chiusa dal venditore perché l'oggetto non è più disponibile." :: String
