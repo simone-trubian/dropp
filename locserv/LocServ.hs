@@ -76,10 +76,9 @@ server = bangHTML
   where
     bangHTML :: Int -> EitherT ServantErr IO Availability
     bangHTML av
-      | av > 10 = return Available
-      | av > 5 = return (AvCount av)
-      | av < 5 = return (Low av)
-      | av == 0 = return Out
+      | av >= 10 = return Available
+      | av >= 5 && av < 10 = return (AvCount av)
+      | av < 5 && av > 0 = return (Low av)
       | otherwise = return Out
 
     bangJSON :: Int -> EitherT ServantErr IO JsonAv

@@ -100,9 +100,9 @@ instance ToHTML Availability where
     color (Low _) = "color:orange"
     color Out = "color:red"
 
-    mockSentence Available = ""
-    mockSentence (AvCount _) = ""
-    mockSentence (Low _) = ""
+    mockSentence Available = "In stock, usually dispatched in 1 business day"
+    mockSentence (AvCount n) = pack $ show n ++ " units, dispatched in 1 business day"
+    mockSentence (Low n) = pack $ "Only " ++ show n ++ " units, dispatched in 1 business day"
     mockSentence Out = "Currently out of stock"
 
 instance FromJSON Availability
