@@ -6,7 +6,6 @@ import Dropp.HTML
 import Lucid
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Data.Text.Internal (Text)
 import Control.Monad.Trans.Either (EitherT)
 import Servant.API
 import Servant
@@ -29,7 +28,7 @@ import Network.HTTP.Media
 data HTMLLucid
 
 
-type TestAPI = "bangOK" :> Capture "title" Text :> Get '[HTMLLucid] Item
+type TestAPI = "bangHTML" :> Capture "availability" Int :> Get '[HTMLLucid] Availability
           :<|> "ebay" :> Capture "isOn" Bool :> Get '[HTMLLucid] EbayStatus
           :<|> "bangJSON" :> Capture "count" Int :> Get '[JSON] JsonAv
 
@@ -46,7 +45,7 @@ instance Accept HTMLLucid where
     contentType _ = "text" // "html" /: ("charset", "utf-8")
 
 
-instance ToHtml Item where
+instance ToHtml Availability where
   toHtml = bangGoodMockPage
 
   toHtmlRaw = toHtml
@@ -70,17 +69,21 @@ blockAPI = Proxy
 
 
 server :: Server TestAPI
-server = bangOK
+server = bangHTML
     :<|> ebay
     :<|> bangJSON
 
   where
-    bangOK :: Text -> EitherT ServantErr IO Item
-    bangOK title =
-        return (Item "" "" title (Just Available) Nothing)
+    bangHTML :: Int -> EitherT ServantErr IO Availability
+    bangHTML av
+      | av > 10 = return Available
+      | av > 5 = return (AvCount av)
+      | av < 5 = return (Low av)
+      | av == 0 = return Out
+      | otherwise = return Out
 
     bangJSON :: Int -> EitherT ServantErr IO JsonAv
-    bangJSON availability = return (JsonAv availability)
+    bangJSON av = return (JsonAv av)
 
     ebay :: Bool -> EitherT ServantErr IO EbayStatus
     ebay isOn = return (if isOn then On else Off)

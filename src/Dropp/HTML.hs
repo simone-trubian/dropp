@@ -98,22 +98,22 @@ renderAvailability av = li_ [style_ (color av)] (toHtml $ message av)
 -- ------------------------------------------------------------------------- --
 
 -- | Return a minimal page containing only the title and availability.
-bangGoodMockPage :: Monad m => Item -> HtmlT m ()
-bangGoodMockPage item =
+bangGoodMockPage :: Monad m => Availability -> HtmlT m ()
+bangGoodMockPage av =
     html_ $ do
-      title_ (toHtml $ item_name item)
-      body_ (div_ [class_ "status"] (toHtml (mockSentence $ availability item)))
+      title_ (toHtml ("Mock Title" :: String))
+      body_ (div_ [class_ "status"] (toHtml (mockSentence av)))
 
 
 -- | Return a minimal Ebay mock page containing the disclaimer string depending
 -- on the value of the EbayStatus parameter.
-ebayMockPage :: Monad m => Item -> HtmlT m ()
-ebayMockPage item =
+ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
+ebayMockPage status =
   html_
     $ body_
       $ span_ [class_ "statusLeftContent"]
         $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
-        (toHtml $ mockSentence (ebayStatus item))
+        (toHtml $ mockSentence status)
 
 
 
