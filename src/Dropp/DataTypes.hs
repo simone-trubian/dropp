@@ -8,6 +8,7 @@ module Dropp.DataTypes where
 import Data.Aeson
 import GHC.Generics (Generic)
 import Data.Text.Internal (Text)
+import qualified Data.HashMap.Lazy as HML (lookup)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Control.Applicative (empty)
 import Text.Parsec
@@ -105,7 +106,19 @@ instance ToHTML Availability where
     mockSentence (Low n) = pack $ "Only " ++ show n ++ " units, dispatched in 1 business day"
     mockSentence Out = "Currently out of stock"
 
-instance FromJSON Availability
+
+instance FromJSON Availability where
+    parseJSON (Object o) = case HML.lookup (pack "message") o of
+        Just (String s) -> parseString s
+        _ -> empty
+
+        where
+          parseString s = case mkAvailability s of
+              (Just Out) -> pure Out
+              (Just Available) -> pure Available
+              (Just (AvCount n)) -> pure (AvCount n)
+              (Just (Low n)) -> pure (Low n)
+              Nothing -> empty
 
 
 -- | Exported smart constructor for the Availability data type. The function
