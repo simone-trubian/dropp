@@ -54,6 +54,7 @@ library
     , lifted-base >= 0.2.3.6 && <= 0.2.3.6
     , mtl >= 2.2.1 && <= 2.2.1
     , unordered-containers >= 0.2.7.0 && <= 0.2.7.0
+    , exceptions >= 0.8.2.1 && <= 0.8.2.1
 
 
   exposed-modules:

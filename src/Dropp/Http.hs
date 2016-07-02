@@ -11,16 +11,19 @@ where
 
 
 import Dropp.DataTypes
-import Dropp.HTML
-import Data.Text.Internal (Text)
+import Dropp.HTML()
 import Safe (headMay)
-import Data.Either (isRight)
-import Data.Text (unpack)
 import Text.Printf (printf)
-import Data.ByteString.Lazy (ByteString)
-import qualified Data.ByteString as Bs (ByteString)
 import Control.Exception.Lifted (catch)
+import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans (lift)
+import qualified Data.ByteString as BS (ByteString)
+import Data.Text.Encoding (encodeUtf8)
+
+import Data.Text
+  ( unpack
+  , breakOn)
+
 import Data.Aeson
   ( FromJSON
   , decode)
@@ -45,9 +48,10 @@ import Network.HTTP.Types.Header
 
 import Network.HTTP.Conduit
   ( Manager
-  , Response
+  , Request
   , HttpException
   , httpLbs
+  , queryString
   , responseHeaders
   , responseBody
   , parseUrl)
@@ -116,7 +120,9 @@ fetchHttp
     -> MaybeIO a -- ^Converted value wrapped in a MaybeT IO computation.
 
 fetchHttp manager url = do
-    request <- parseUrl $ unpack url
+    -- Please note that this function uses the `parseBangUrl` function to
+    -- overcome limitation of BangGood.
+    request <- parseBangUrl url
     response <- catch
         (httpLbs request manager)
         (\(x :: HttpException)-> do
@@ -132,23 +138,21 @@ fetchHttp manager url = do
     guard (isJust mimeType)
 
     -- Return the wanted data type using the right decoding function.
-    case fromJust mimeType of
-       TextHtml -> do
-           let decodedType = decodeHTML $ responseBody response
-           guard (isJust decodedType)
-           return $ fromJust decodedType
+    let decodedType = decodeHTML $ responseBody response
+    case decodedType of
+        Nothing -> do
+          let decodedJSON = decode $ responseBody response
+          guard (isJust decodedJSON)
+          return $ fromJust decodedJSON
 
-       _ -> do
-           let decodedType = decode $ responseBody response
-           guard (isJust decodedType)
-           return $ fromJust decodedType
+        _ -> return $ fromJust decodedType
 
 
 
 -- | Extract content type from the list of header elements.
 getContentType
     :: ResponseHeaders -- ^List of header elements of the response.
-    -> Maybe Bs.ByteString -- ^ Value of the content type if found.
+    -> Maybe BS.ByteString -- ^ Value of the content type if found.
 
 getContentType headers = snd <$> cType headers
   where
@@ -177,9 +181,25 @@ getMimeType parseHeader =
 
 -- | Check if the content type of the response matches the one requested.
 parseContentType
-    :: Bs.ByteString -- ^ Value of the content type found in the request.
+    :: BS.ByteString -- ^ Value of the content type found in the request.
     -> String -- ^Content type requested by the calling function.
     -> Either ParseError String -- ^Parsing result.
 
 parseContentType responseCType demandedCType =
     parse (string demandedCType) "" responseCType
+
+
+-- | Custom url parser used to overcome bad query strings used by BangGood.
+-- BangGood uses badly formatted queries that are regected by the `parseUrl`
+-- function. This function generates a request type only by using the domain
+-- and slug part of the URL and then updates the request with the original query
+-- string.
+parseBangUrl
+    :: MonadThrow m
+    => URL -- ^ URL used to generate the request.
+    -> m Request -- ^ Request updated with the original query string.
+
+parseBangUrl url = do
+    let brokenUrl = breakOn "?" url
+    request <- parseUrl $ unpack (fst brokenUrl)
+    return $ request {queryString = encodeUtf8 (snd brokenUrl)}
