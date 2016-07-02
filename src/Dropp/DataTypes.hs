@@ -102,11 +102,32 @@ instance ToHTML Availability where
     color Out = "color:red"
 
     mockSentence Available = "In stock, usually dispatched in 1 business day"
-    mockSentence (AvCount n) = pack $ show n ++ " units, dispatched in 1 business day"
-    mockSentence (Low n) = pack $ "Only " ++ show n ++ " units, dispatched in 1 business day"
     mockSentence Out = "Currently out of stock"
+    mockSentence (AvCount n) =
+        pack $ show n ++ " units, dispatched in 1 business day"
+    mockSentence (Low n) =
+        pack $ "Only " ++ show n ++ " units, dispatched in 1 business day"
 
 
+-- | Custom implementation of de-serialisation for the Availability data type.
+-- The need for a custom implementation arises from the format of the JSON
+-- object returned by the server, the structure of is:
+--
+--{
+--  "hideBuy": Number,
+--  "message": String,
+--  "stocks": Number,
+--  "show_stocks": Number,
+--  "hideSku": Number,
+--  "final_price": Number,
+--  "price": Number,
+--  "format_price": String,
+--  "currency_tags": String,
+--  "discount": String
+--}
+--
+-- Of all the fields the only useful is `message` that is exactly the same
+-- message scraped by the website.
 instance FromJSON Availability where
     parseJSON (Object o) = case HML.lookup (pack "message") o of
         Just (String s) -> parseString s
@@ -120,6 +141,15 @@ instance FromJSON Availability where
               (Just (Low n)) -> pure (Low n)
               Nothing -> empty
 
+
+-- | Partial implementation of serialisation of the Availability data type.
+-- Only the `message` part of the full object is implemented so that it can be
+-- used by the local dev server.
+instance ToJSON Availability where
+    toJSON Out = object ["message" .= String (mockSentence Out)]
+    toJSON Available = object ["message" .= String (mockSentence Available)]
+    toJSON (AvCount n) = object ["message" .= String (mockSentence (AvCount n))]
+    toJSON (Low n) = object ["message" .= String (mockSentence (Low n))]
 
 -- | Exported smart constructor for the Availability data type. The function
 -- gets the scraped availability string and parses it to generates the
@@ -260,7 +290,7 @@ instance FromJSON DroppEnv
 
 
 -- ------------------------------------------------------------------------- --
---              TYPE ALIASES
+--              OTHER TYPES
 -- ------------------------------------------------------------------------- --
 
 -- | Data representing the content type of an HTTP response.
@@ -269,16 +299,4 @@ data MimeType =
   | ApplicationJson -- ^ JSON object.
 
 
--- ------------------------------------------------------------------------- --
---              TYPE ALIASES
--- ------------------------------------------------------------------------- --
-
 type URL = Text
-
--- | Provisional data structure as captured from the JSON object of variable items.
-data JsonAv = JsonAv {itemCount :: Int}
-
-  deriving (Show, Generic)
-
-instance FromJSON JsonAv
-instance ToJSON JsonAv

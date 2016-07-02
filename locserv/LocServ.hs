@@ -28,13 +28,21 @@ import Network.HTTP.Media
 data HTMLLucid
 
 
-type TestAPI = "bangHTML" :> Capture "availability" Int :> Get '[HTMLLucid] Availability
-          :<|> "ebay" :> Capture "isOn" Bool :> Get '[HTMLLucid] EbayStatus
-          :<|> "bangJSON" :> Capture "count" Int :> Get '[JSON] JsonAv
+type TestAPI = "bangHTML"
+               :> Capture "availability" Int
+               :> Get '[HTMLLucid] Availability
+
+          :<|> "bangJSON"
+                :> Capture "count" Int
+                :> Get '[JSON] Availability
+
+          :<|> "ebay"
+               :> Capture "isOn" Bool
+               :> Get '[HTMLLucid] EbayStatus
 
 
 -- ------------------------------------------------------------------------- --
---              BOILERPLATE
+--              HTML CLASSES IMPLEMENTATION
 -- ------------------------------------------------------------------------- --
 
 instance ToHtml a => MimeRender HTMLLucid a where
@@ -56,8 +64,9 @@ instance ToHtml EbayStatus where
 
   toHtmlRaw = toHtml
 
+
 -- ------------------------------------------------------------------------- --
---              BOILERPLATE
+--              SERVER DEFINITION
 -- ------------------------------------------------------------------------- --
 
 main :: IO ()
@@ -69,23 +78,20 @@ blockAPI = Proxy
 
 
 server :: Server TestAPI
-server = bangHTML
-    :<|> ebay
-    :<|> bangJSON
+server = bangAv
+    :<|> bangAv
+    :<|> ebayStat
 
   where
-    bangHTML :: Int -> EitherT ServantErr IO Availability
-    bangHTML av
+    bangAv :: Int -> EitherT ServantErr IO Availability
+    bangAv av
       | av >= 10 = return Available
       | av >= 5 && av < 10 = return (AvCount av)
       | av < 5 && av > 0 = return (Low av)
       | otherwise = return Out
 
-    bangJSON :: Int -> EitherT ServantErr IO JsonAv
-    bangJSON av = return (JsonAv av)
-
-    ebay :: Bool -> EitherT ServantErr IO EbayStatus
-    ebay isOn = return (if isOn then On else Off)
+    ebayStat :: Bool -> EitherT ServantErr IO EbayStatus
+    ebayStat isOn = return (if isOn then On else Off)
 
 
 app :: Application
