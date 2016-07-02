@@ -29,11 +29,11 @@ data HTMLLucid
 
 
 type TestAPI = "bangHTML"
-               :> Capture "availability" Int
+               :> Capture "availabilityCount" Int
                :> Get '[HTMLLucid] Availability
 
           :<|> "bangJSON"
-                :> Capture "count" Int
+                :> Capture "availabilityCount" Int
                 :> Get '[JSON] Availability
 
           :<|> "ebay"

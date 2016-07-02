@@ -12,7 +12,6 @@ import Data.Text.Internal (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
-import Control.Applicative ((<$>))
 import Data.Text
   ( pack
   , unpack)
@@ -58,9 +57,7 @@ import Control.Lens
   , (.~))
 
 
--- ------------------------------------------------------------------------- --
---              MAIN
--- ------------------------------------------------------------------------- --
+
 
 main :: IO ()
 main = do
