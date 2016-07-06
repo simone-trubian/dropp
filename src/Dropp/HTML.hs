@@ -19,6 +19,7 @@ import Lucid
 import Safe (headMay)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
+import Data.Text (append)
 
 import Text.XML.Cursor
   ( Cursor
@@ -75,7 +76,8 @@ renderEbayStatus :: Monad m => Item -> HtmlT m ()
 renderEbayStatus item =
     li_
         (a_
-         [href_ (ebay_url item), style_ (color $ ebayStatus item)]
+         [ href_ (ebay_url item)
+         , style_ $ "text-decoration:none; " `append` color (ebayStatus item)]
          (toHtml (message $ ebayStatus item)))
 
 
