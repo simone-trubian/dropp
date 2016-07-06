@@ -11,6 +11,7 @@ import Data.Text.Internal (Text)
 import qualified Data.HashMap.Lazy as HML (lookup)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Control.Applicative (empty)
+import Control.Monad (mzero)
 import Text.Parsec
   ( many1
   , many
@@ -221,13 +222,13 @@ instance FromJSON EbayStatus where
 
 data Item = Item
   { -- | URL of item page from the shipper website.
-    source_url :: URL
+    sourceUrl :: URL
 
     -- | URL of the ebay store page of the same item.
-  , ebay_url :: URL
+  , ebayUrl :: URL
 
     -- | Name of the item.
-  , item_name :: Text
+  , itemName :: Text
 
     -- | Availability of the item as fetched from the shipper website.
   , availability :: Maybe Availability
@@ -238,14 +239,23 @@ data Item = Item
   deriving (Show, Generic)
 
 
--- | Dummy implementation of the type class. This boilerplate in rendered
+instance FromJSON Item where
+    parseJSON (Object o) =
+        Item <$> o .: "source_url"
+             <*> o .: "ebay_url"
+             <*> o .: "item_name"
+             <*> o .:? "availability"
+             <*> o .:? "ebayStatus"
+
+    parseJSON _ = mzero
+
+
+-- | Dummy implementation of the FromHTML type class. This boilerplate is
 -- necessary to allow type-checking of the `fetchHttp` function, even though
--- trying to parse an Item from a HTML page is considered an error.
+-- trying to parse an Item from a HTML page is nonsense and therefore considered
+-- an error.
 instance FromHTML Item where
     decodeHTML _ = Nothing
-
-
-instance FromJSON Item
 
 
 -- | Update the value of an item with the information that has to be fetched

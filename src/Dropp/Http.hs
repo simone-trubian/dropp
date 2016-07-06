@@ -76,8 +76,8 @@ getItemUpdate
 
 getItemUpdate mgr item =
     updateItem item <$>
-    getAvailability mgr (source_url item) <*>
-    getEbayStatus mgr (ebay_url item)
+    getAvailability mgr (sourceUrl item) <*>
+    getEbayStatus mgr (ebayUrl item)
 
 
 
