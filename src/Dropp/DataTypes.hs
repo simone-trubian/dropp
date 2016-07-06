@@ -221,8 +221,10 @@ instance FromJSON EbayStatus where
 -- ------------------------------------------------------------------------- --
 
 data Item = Item
-  { -- | URL of item page from the shipper website.
-    sourceUrl :: URL
+  { -- | Database ID of the item.
+    id :: Int
+    -- | URL of item page from the shipper website.
+  , sourceUrl :: URL
 
     -- | URL of the ebay store page of the same item.
   , ebayUrl :: URL
@@ -241,7 +243,8 @@ data Item = Item
 
 instance FromJSON Item where
     parseJSON (Object o) =
-        Item <$> o .: "source_url"
+        Item <$> o .: "id"
+             <*> o .: "source_url"
              <*> o .: "ebay_url"
              <*> o .: "item_name"
              <*> o .:? "availability"
