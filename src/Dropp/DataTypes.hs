@@ -11,7 +11,6 @@ import Data.Text.Internal (Text)
 import qualified Data.HashMap.Lazy as HML (lookup)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Control.Applicative (empty)
-import Control.Monad (mzero)
 import Text.Parsec
   ( many1
   , many
@@ -85,7 +84,7 @@ data Availability =
   | Low Int -- ^ Item available but the stock is nearly out.
   | Out -- ^ Item is not available.
 
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
 
 -- | Define the sentences used in the email report overloading the ToHTML class.
@@ -142,6 +141,8 @@ instance FromJSON Availability where
               (Just (Low n)) -> pure (Low n)
               Nothing -> empty
 
+    parseJSON _ = empty
+
 
 -- | Partial implementation of serialisation of the Availability data type.
 -- Only the `message` part of the full object is implemented so that it can be
@@ -191,7 +192,7 @@ data EbayStatus =
     On -- ^ Item is available to purchase from Ebay.
   | Off -- ^ Item has been removed from the Ebay store.
 
-  deriving (Show, Ord, Eq, Generic)
+  deriving (Show, Ord, Eq)
 
 
 -- | Define the sentences used in the email report overloading the ToHTML class.
@@ -238,7 +239,7 @@ data Item = Item
     -- | Availabilty of the item on the ebay store.
   , ebayStatus :: Maybe EbayStatus}
 
-  deriving (Show, Generic)
+  deriving (Show)
 
 
 instance FromJSON Item where
@@ -250,7 +251,7 @@ instance FromJSON Item where
              <*> o .:? "availability"
              <*> o .:? "ebayStatus"
 
-    parseJSON _ = mzero
+    parseJSON _ = empty
 
 
 -- | Dummy implementation of the FromHTML type class. This boilerplate is
