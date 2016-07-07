@@ -63,19 +63,18 @@ formatItem :: Monad m => Item -> HtmlT m ()
 formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-            (renderItem item)
+          ( renderItem item
          <> renderEbayStatus item
-         <> renderAvailability item
-
+         <> renderAvailability item)
 
 -- | Generate an HTML list item containing the item ID and item name.
 renderItem :: Monad m => Item -> HtmlT m ()
 renderItem item = li_
-                      (toHtml $ pack $ show $ itemId item)
+                    ( toHtml (pack $ show $ itemId item)
                    <> toHtml (" - " :: Text)
                    <> a_ [ href_ (sourceUrl item)
                          , style_ "color:black; text-decoration:none"]
-                      (toHtml $ itemName item)
+                      (toHtml $ itemName item))
 
 
 -- | Generate an HTML list item containing a colour-coded ebay status string.
