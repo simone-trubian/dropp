@@ -19,7 +19,11 @@ import Lucid
 import Safe (headMay)
 import Text.HTML.DOM (parseLBS)
 import Data.ByteString.Lazy.Internal (ByteString)
-import Data.Text (append)
+import Data.Monoid ((<>))
+import Data.Text
+  ( Text
+  , append
+  , pack)
 
 import Text.XML.Cursor
   ( Cursor
@@ -40,14 +44,17 @@ import Text.XML.Cursor
 formatOutput
     :: [Item] -- ^List of all pages scraped from the suppliers website.
     -> ByteString -- ^HTML payload of the report email
-formatOutput items = renderBS $ ul_ $ mapM_ formatItem items
+formatOutput items =
+    renderBS
+        $ ul_ [style_ "list-style-type:none; margin:10px 0"]
+            $ mapM_ formatItem items
 
 
 -- | Generate HTML list element comprised of:
 --
 -- [@Item name@] The name of the item, as defined in the item data base record
--- is formatted as an anchor. The href of the anchor is the sourceUrl of the item
--- record.
+-- is formatted as an anchor. The href of the anchor is the sourceUrl of the
+-- item record.
 -- [@Ebay status@] Status of the Ebay store item as formatted by the
 -- 'renderEbayStatus' function.
 -- [@Source availability@] Availability of the item as formatted by the
@@ -56,12 +63,15 @@ formatItem :: Monad m => Item -> HtmlT m ()
 formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-         $ do li_ (a_ [href_ (sourceUrl item), style_
-                       "color:black; text-decoration:none"]
-                   (toHtml $ itemName item))
+         $ do renderItem item
               renderEbayStatus item
               renderAvailability $ availability item
 
+
+renderItem :: Monad m => Item -> HtmlT m ()
+renderItem item = li_ (toHtml $ pack $ show $ itemId item) <> (toHtml (" - " :: Text)) <> a_ [href_ (sourceUrl item), style_
+                       "color:black; text-decoration:none"]
+                   (toHtml $ itemName item)
 
 -- | Generate an HTML list item containing a colour-coded ebay status string.
 -- The status string is color coded in the following manner:

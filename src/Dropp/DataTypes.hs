@@ -223,7 +223,7 @@ instance FromJSON EbayStatus where
 
 data Item = Item
   { -- | Database ID of the item.
-    id :: Int
+    itemId :: Int
     -- | URL of item page from the shipper website.
   , sourceUrl :: URL
 
