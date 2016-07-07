@@ -63,15 +63,20 @@ formatItem :: Monad m => Item -> HtmlT m ()
 formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-         $ do renderItem item
-              renderEbayStatus item
-              renderAvailability $ availability item
+            (renderItem item)
+         <> renderEbayStatus item
+         <> renderAvailability item
 
 
+-- | Generate an HTML list item containing the item ID and item name.
 renderItem :: Monad m => Item -> HtmlT m ()
-renderItem item = li_ (toHtml $ pack $ show $ itemId item) <> (toHtml (" - " :: Text)) <> a_ [href_ (sourceUrl item), style_
-                       "color:black; text-decoration:none"]
-                   (toHtml $ itemName item)
+renderItem item = li_
+                      (toHtml $ pack $ show $ itemId item)
+                   <> toHtml (" - " :: Text)
+                   <> a_ [ href_ (sourceUrl item)
+                         , style_ "color:black; text-decoration:none"]
+                      (toHtml $ itemName item)
+
 
 -- | Generate an HTML list item containing a colour-coded ebay status string.
 -- The status string is color coded in the following manner:
@@ -101,8 +106,9 @@ renderEbayStatus item =
 --
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
-renderAvailability :: Monad m => Maybe Availability -> HtmlT m ()
-renderAvailability av = li_ [style_ (color av)] (toHtml $ message av)
+renderAvailability :: Monad m => Item -> HtmlT m ()
+renderAvailability item = li_ [style_ (color $ availability item)]
+                              (toHtml $ message $ availability item)
 
 
 -- ------------------------------------------------------------------------- --

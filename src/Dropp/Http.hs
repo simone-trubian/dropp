@@ -126,7 +126,9 @@ fetchHttp manager url = do
     response <- catch
         (httpLbs request manager)
         (\(x :: HttpException)-> do
-            lift $ printf "failed to fetch %s because of %s\n" (unpack url) (show x)
+            lift $ printf "failed to fetch %s because of %s\n"
+                   (unpack url)
+                   (show x)
             mzero)
 
     -- Extract content type from the response and fail if not found.
