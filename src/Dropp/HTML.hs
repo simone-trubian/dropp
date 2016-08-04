@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- |This module contains HTML manipulation functions, in particular HTML
 -- parsing and HTML generation. The module employs the
@@ -187,12 +188,11 @@ parseEbayStatus cursor =
 
     isOn node =
       case content <$> headMay (child node) of
-        Just isOffSentence-> Just Off
+        Just [] -> Nothing
+        Just ["Questo oggetto è esaurito."] -> Just Off
+        Just [_] -> Nothing
+        Just (_:_) -> Nothing
         Nothing -> Just On
-
-    isOffSentence :: String
-    isOffSentence = "Questa inserzione è stata chiusa dal venditore perché "
-                    ++ "l'oggetto non è più disponibile."
 
 
 -- | Generate a parsing cursor from an HTML page.
