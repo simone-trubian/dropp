@@ -2,6 +2,8 @@
 
 BEGIN;
 
--- XXX Add DDLs here.
+DROP TYPE IF EXISTS ebay_status;
+
+DROP TYPE IF EXISTS availability;
 
 COMMIT;

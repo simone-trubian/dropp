@@ -4,6 +4,8 @@
 
 BEGIN;
 
--- XXX Add DDLs here.
+CREATE TYPE ebay_status AS ENUM ('on', 'off');
+
+CREATE TYPE availability AS ENUM ('available', 'low', 'out');
 
 COMMIT;
