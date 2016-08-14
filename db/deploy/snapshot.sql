@@ -8,4 +8,10 @@ CREATE TYPE ebay_status AS ENUM ('on', 'off');
 
 CREATE TYPE availability AS ENUM ('available', 'low', 'out');
 
+CREATE TABLE v_1.snapshot (
+    id int PRIMARY KEY,
+    ebay_status ebay_status,
+    availability availability
+);
+
 COMMIT;
