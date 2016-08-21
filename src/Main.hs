@@ -76,6 +76,10 @@ main = do
     -- Fetch all pages listed in the DB table.
     items <- mapM (getItemUpdate mgr) dbItems
 
+    -- Write snapshot to DB.
+    let itemStatuses = map itemToSnap items
+    mapM_ (writeItemSnapshot mgr "http://localhost:3000/snapshot") itemStatuses
+
     -- Get timestamp.
     utcTime <- getCurrentTime
 
