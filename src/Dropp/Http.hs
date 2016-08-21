@@ -5,7 +5,8 @@
 -- <https://hackage.haskell.org/package/http-conduit-2.1.10.1 Http Conduit> libary.
 module Dropp.Http
   ( getItemUpdate
-  , getItems)
+  , getItems
+  , writeItemSnapshot)
 
 where
 
@@ -18,14 +19,18 @@ import Control.Exception.Lifted (catch)
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans (lift)
 import qualified Data.ByteString as BS (ByteString)
+import qualified Data.ByteString.Lazy.Internal as LBS (ByteString)
 import Data.Text.Encoding (encodeUtf8)
 
 import Data.Text
   ( unpack
+  , pack
+  , append
   , breakOn)
 
 import Data.Aeson
   ( FromJSON
+  , encode
   , decode)
 
 import Control.Monad.Trans.Maybe
@@ -50,7 +55,10 @@ import Network.HTTP.Conduit
   ( Manager
   , Request
   , HttpException
+  , RequestBody(RequestBodyLBS)
   , httpLbs
+  , method
+  , requestBody
   , queryString
   , responseHeaders
   , responseBody
@@ -108,6 +116,46 @@ getEbayStatus
     -> IO (Maybe EbayStatus) -- ^IO computation returning a Maybe Ebay status.
 
 getEbayStatus mgr url = runMaybeT $ fetchHttp mgr url
+
+
+
+-- | Perform an HTTP GET request to fetch the snaphot of an item.
+getSnapshot
+    :: Manager -- ^Conduit HTTP manager.
+    -> URL -- ^URL to be fetched.
+    -> IO (Maybe [Snapshot]) -- ^IO computation returning a Maybe Snapshot list.
+
+getSnapshot mgr url = runMaybeT $ fetchHttp mgr url
+
+
+
+-- | Perform the HTTP call with a method of choice.
+writeItemSnapshot
+    -- :: (ToJSON a) =>
+    :: Manager -- ^Conduit HTTP manager.
+    -> URL -- ^URL to be fetched.
+    -> Snapshot
+    -> IO (Maybe LBS.ByteString)
+
+writeItemSnapshot manager url payload = runMaybeT $ do
+    let patchUrl = url `append` pack ("?id=eq." ++ show (snapItemId payload))
+    initRequest <- parseUrl $ unpack patchUrl
+    let reqBody = RequestBodyLBS $ encode payload
+    let request = initRequest {method = "PATCH"} {requestBody = reqBody}
+    response <- catch
+        (httpLbs request manager)
+        (\(_ :: HttpException)-> do
+            initPostReq <- parseUrl $ unpack url
+            let requestPost = initPostReq {method = "POST"} {requestBody = reqBody}
+            catch
+                (httpLbs requestPost manager)
+                (\ (x :: HttpException)-> do
+                    lift $ printf "failed to post %s because of %s\n"
+                           (unpack url)
+                           (show x)
+                    mzero))
+
+    return $ responseBody response
 
 
 
