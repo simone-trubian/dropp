@@ -14,4 +14,8 @@ CREATE TABLE v_1.snapshot (
     availability availability
 );
 
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON TABLE v_1.snapshot
+TO dropp_client;
+
 COMMIT;
