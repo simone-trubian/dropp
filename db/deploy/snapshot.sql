@@ -4,9 +4,9 @@
 
 BEGIN;
 
-CREATE TYPE ebay_status AS ENUM ('on', 'off');
+CREATE TYPE ebay_status AS ENUM ('on', 'off', 'no_status');
 
-CREATE TYPE availability AS ENUM ('available', 'low', 'out');
+CREATE TYPE availability AS ENUM ('available', 'low', 'out', 'no_availability');
 
 CREATE TABLE v_1.snapshot (
     id int PRIMARY KEY,
