@@ -153,6 +153,7 @@ instance ToJSON Availability where
     toJSON (AvCount n) = object ["message" .= String (mockSentence (AvCount n))]
     toJSON (Low n) = object ["message" .= String (mockSentence (Low n))]
 
+
 -- | Exported smart constructor for the Availability data type. The function
 -- gets the scraped availability string and parses it to generates the
 -- appropriate type.
@@ -217,6 +218,10 @@ instance FromJSON EbayStatus where
     parseJSON _ = empty
 
 
+instance ToJSON EbayStatus where
+  toJSON On = String "on"
+  toJSON Off = String "off"
+
 -- ------------------------------------------------------------------------- --
 --              ITEM
 -- ------------------------------------------------------------------------- --
@@ -273,6 +278,129 @@ updateItem item av status = newItem
   where
     newItem = partialItem {availability = av}
     partialItem = item {ebayStatus = status}
+
+
+-- ------------------------------------------------------------------------- --
+--              SNAPSHOT
+-- ------------------------------------------------------------------------- --
+
+data Snapshot = Snapshot
+  { -- | Database ID of the item
+    snapItemId :: Int
+
+    -- | Availability of the item as fetched from the shipper website.
+  , snapAvailability :: SnapAvailability
+
+    -- | Availabilty of the item on the ebay store.
+  , snapEbayStatus :: SnapEbayStatus}
+
+  deriving (Show)
+
+
+instance FromJSON Snapshot where
+    parseJSON (Object o) =
+        Snapshot <$> o .: "id"
+                 <*> o .: "ebay_status"
+                 <*> o .: "availability"
+
+    parseJSON _ = empty
+
+
+instance ToJSON Snapshot where
+  toJSON (Snapshot snapItemId snapAvailability snapEbayStatus) =
+    object [ "id" .= snapItemId
+           , "availability" .= snapAvailability
+           , "ebay_status" .= snapEbayStatus]
+
+
+-- | Dummy implementation of the FromHTML type class. This boilerplate is
+-- necessary to allow type-checking of the `fetchHttp` function, even though
+-- trying to parse an Item from a HTML page is nonsense and therefore considered
+-- an error.
+instance FromHTML Snapshot where
+    decodeHTML _ = Nothing
+
+
+itemToSnap
+  :: Item
+  -> Snapshot
+
+itemToSnap item = Snapshot snapId (av $ availability item) (st $ ebayStatus item)
+  where
+    snapId = itemId item
+
+    st :: Maybe EbayStatus -> SnapEbayStatus
+    st Nothing = NoStatus
+    st (Just On) = SnapOn
+    st (Just Off) = SnapOff
+
+    av :: Maybe Availability -> SnapAvailability
+    av Nothing = NoAvailability
+    av (Just Available) = ItemAvailable
+    av (Just (AvCount _)) = ItemAvailable
+    av (Just (Low _)) = ItemLow
+    av (Just Out) = ItemOut
+
+-- ------------------------------------------------------------------------- --
+--              SNAPHOT EBAY STATUS
+-- ------------------------------------------------------------------------- --
+
+-- | Type alias for an ebay status.
+data SnapEbayStatus =
+    SnapOn -- ^ Item is available to purchase from Ebay.
+  | SnapOff -- ^ Item has been removed from the Ebay store.
+  | NoStatus -- ^ Item status is not known.
+
+  deriving (Show, Ord, Eq)
+
+
+-- | Overloaded instance (Still unused) for decoding JSON to the data type.
+instance FromJSON SnapEbayStatus where
+    parseJSON (String s) = case s of
+        "on" -> pure SnapOn
+        "off" -> pure SnapOff
+        "no_status" -> pure NoStatus
+        _ -> empty
+
+    parseJSON _ = empty
+
+
+instance ToJSON SnapEbayStatus where
+  toJSON SnapOn = String "on"
+  toJSON SnapOff = String "off"
+  toJSON NoStatus = String "no_status"
+
+
+-- ------------------------------------------------------------------------- --
+--              SNAPSHOT AVAILABILITY
+-- ------------------------------------------------------------------------- --
+
+data SnapAvailability =
+-- | Wrapper for a BangGood availability as obtained from the item page.
+    ItemAvailable -- ^ Item is available in an unspecified quantity.
+  | ItemLow -- ^ Item available but the stock is nearly out.
+  | ItemOut -- ^ Item is not available.
+  | NoAvailability -- ^ Item availability is not known.
+
+  deriving (Show, Eq)
+
+
+instance FromJSON SnapAvailability where
+    parseJSON (String s) = case s of
+        "available" -> pure ItemAvailable
+        "low" -> pure ItemLow
+        "out" -> pure ItemOut
+        "no_availability" -> pure NoAvailability
+        _ -> empty
+
+    parseJSON _ = empty
+
+
+instance ToJSON SnapAvailability where
+  toJSON ItemAvailable = String "available"
+  toJSON ItemLow = String "low"
+  toJSON ItemOut = String "out"
+  toJSON NoAvailability = String "no_availability"
 
 
 -- ------------------------------------------------------------------------- --
