@@ -300,8 +300,8 @@ data Snapshot = Snapshot
 instance FromJSON Snapshot where
     parseJSON (Object o) =
         Snapshot <$> o .: "id"
-                 <*> o .: "ebay_status"
                  <*> o .: "availability"
+                 <*> o .: "ebay_status"
 
     parseJSON _ = empty
 
