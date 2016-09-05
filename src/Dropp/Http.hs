@@ -6,6 +6,7 @@
 module Dropp.Http
   ( getItemUpdate
   , getItems
+  , getSnapshot
   , writeItemSnapshot)
 
 where
@@ -131,7 +132,6 @@ getSnapshot mgr url = runMaybeT $ fetchHttp mgr url
 
 -- | Perform the HTTP call with a method of choice.
 writeItemSnapshot
-    -- :: (ToJSON a) =>
     :: Manager -- ^Conduit HTTP manager.
     -> URL -- ^URL to be fetched.
     -> Snapshot
