@@ -12,6 +12,10 @@ import Data.Text.Internal (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
+import Data.List
+  ( sort
+  , zip3)
+
 import Data.Text
   ( pack
   , unpack)
@@ -70,15 +74,21 @@ main = do
     -- Create connection manager
     mgr <- newManager tlsManagerSettings
 
+    -- Fetch previous snapshot.
+    previousSnapshot <- fromJust <$> getSnapshot mgr "http://localhost:3000/snapshot"
+
     -- Fetch pages urls from DB.
     dbItems <- fromJust <$> getItems mgr (dbItemsUrl droppEnv)
 
-    -- Fetch all pages listed in the DB table.
+    -- Fetch all pages listed in the DB table and generate snapshot.
     items <- mapM (getItemUpdate mgr) dbItems
+    let currentSnapshot = map itemToSnap items
 
     -- Write snapshot to DB.
-    let itemStatuses = map itemToSnap items
-    mapM_ (writeItemSnapshot mgr "http://localhost:3000/snapshot") itemStatuses
+    mapM_ (writeItemSnapshot mgr "http://localhost:3000/snapshot") currentSnapshot
+
+    -- Compute snapshot diff.
+    let snaps = map compareSnapshot $ zip3 (sort currentSnapshot) (sort previousSnapshot) (sort items)
 
     -- Get timestamp.
     utcTime <- getCurrentTime
