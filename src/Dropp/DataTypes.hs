@@ -247,6 +247,14 @@ data Item = Item
   deriving (Show)
 
 
+instance Eq Item where
+  a == b = itemId a == itemId b
+
+
+instance Ord Item where
+  a `compare` b = itemId a `compare` itemId b
+
+
 instance FromJSON Item where
     parseJSON (Object o) =
         Item <$> o .: "id"
@@ -297,6 +305,14 @@ data Snapshot = Snapshot
   deriving (Show)
 
 
+instance Eq Snapshot where
+  a == b = snapItemId a == snapItemId b
+
+
+instance Ord Snapshot where
+  a `compare` b = snapItemId a `compare` snapItemId b
+
+
 instance FromJSON Snapshot where
     parseJSON (Object o) =
         Snapshot <$> o .: "id"
@@ -340,6 +356,60 @@ itemToSnap item = Snapshot snapId (av $ availability item) (st $ ebayStatus item
     av (Just (AvCount _)) = ItemAvailable
     av (Just (Low _)) = ItemLow
     av (Just Out) = ItemOut
+
+
+
+-- ------------------------------------------------------------------------- --
+--              ITEM SNAPSHOT
+-- ------------------------------------------------------------------------- --
+
+data ItemSnapshot = ItemSnapshot
+
+   { -- | Database ID of the item.
+     itemSnapId :: Int
+     -- | URL of item page from the shipper website.
+   , sourceUrlSnap :: URL
+
+     -- | URL of the ebay store page of the same item.
+   , ebayUrlSnap :: URL
+
+     -- | Name of the item.
+   , itemNameSnap :: Text
+
+     -- | Current snapshot Availability of the item.
+   , currentAvSnap :: SnapAvailability
+
+     -- | Previous snapshot Availability of the item.
+   , prevAvSnap :: SnapAvailability
+
+     -- | Current snapshot Availabilty of the item on the ebay store.
+   , currentStatusSnap :: SnapEbayStatus
+
+     -- | Previous snapshot Availabilty of the item on the ebay store.
+   , prevStatusSnap :: SnapEbayStatus}
+
+   deriving (Show)
+
+compareSnapshot
+  :: (Snapshot, Snapshot, Item)
+  -> Maybe ItemSnapshot
+
+compareSnapshot (current, previous, item)
+  | snapAvailability current /= snapAvailability previous ||
+    snapEbayStatus current /= snapEbayStatus previous = Just snapshot
+  | otherwise = Nothing
+
+  where
+    snapshot = ItemSnapshot (itemId item)
+                            (sourceUrl item)
+                            (ebayUrl item)
+                            (itemName item)
+                            (snapAvailability current)
+                            (snapAvailability previous)
+                            (snapEbayStatus current)
+                            (snapEbayStatus previous)
+
+
 
 -- ------------------------------------------------------------------------- --
 --              SNAPHOT EBAY STATUS
