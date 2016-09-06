@@ -43,13 +43,25 @@ import Text.XML.Cursor
 
 -- | Generate the entire HTML payload used as body of the report email.
 formatOutput
-    :: [Item] -- ^List of all pages scraped from the suppliers website.
+    :: [ItemSnapshot] -- ^List of all pages scraped from the suppliers website.
     -> ByteString -- ^HTML payload of the report email
 formatOutput items =
     renderBS
         $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-            $ mapM_ formatItem items
+            $ mapM_ formatSnapItem items
 
+
+formatSnapItem :: Monad m => ItemSnapshot -> HtmlT m ()
+formatSnapItem itemSnap =
+    li_
+      $ ul_ [style_ "list-style-type:none; margin:10px 0"]
+          ( renderItem (itemSnapId itemSnap) (sourceUrlSnap itemSnap) (itemNameSnap itemSnap)
+         <> li_ (renderEbayStatus (ebayUrlSnap itemSnap) (prevStatusSnap itemSnap)
+             <> toHtml (" -> " :: Text)
+             <> renderEbayStatus (ebayUrlSnap itemSnap) (currentStatusSnap itemSnap))
+         <> li_ (renderAvailability (prevAvSnap itemSnap)
+             <> toHtml (" -> " :: Text)
+             <> renderAvailability (currentAvSnap itemSnap)))
 
 -- | Generate HTML list element comprised of:
 --
@@ -64,18 +76,19 @@ formatItem :: Monad m => Item -> HtmlT m ()
 formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
-          ( renderItem item
+          ( renderItem (itemId item) (sourceUrl item) (itemName item)
          <> renderEbayStatus (ebayUrl item) (ebayStatus item)
          <> renderAvailability (availability item))
 
+
 -- | Generate an HTML list item containing the item ID and item name.
-renderItem :: Monad m => Item -> HtmlT m ()
-renderItem item = li_
-                    ( toHtml (pack $ show $ itemId item)
+renderItem :: Monad m => Int -> URL -> Text -> HtmlT m ()
+renderItem iId iUrl iName = li_
+                    ( toHtml (pack $ show iId)
                    <> toHtml (" - " :: Text)
-                   <> a_ [ href_ (sourceUrl item)
+                   <> a_ [ href_ iUrl
                          , style_ "color:black; text-decoration:none"]
-                      (toHtml $ itemName item))
+                      (toHtml iName))
 
 
 -- | Generate an HTML list item containing a colour-coded ebay status string.
@@ -89,11 +102,10 @@ renderItem item = li_
 -- coding is achieved by modifying the style attribute of the <li> tag.
 renderEbayStatus :: (Monad m, ToHTML a) => URL -> a -> HtmlT m ()
 renderEbayStatus url status =
-    li_
-        (a_
-         [ href_ url
-         , style_ $ "text-decoration:none; " `append` color status]
-         (toHtml (message status)))
+   a_
+    [ href_ url
+    , style_ $ "text-decoration:none; " `append` color status]
+    (toHtml (message status))
 
 
 -- | Generate an HTML list item containing a colour-coded availabilty string.
@@ -107,7 +119,7 @@ renderEbayStatus url status =
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
 renderAvailability :: (Monad m, ToHTML a) => a -> HtmlT m ()
-renderAvailability ava = li_ [style_ (color ava)]
+renderAvailability ava = p_ [style_ (color ava)]
                               (toHtml $ message ava)
 
 
