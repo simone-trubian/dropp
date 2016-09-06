@@ -390,6 +390,7 @@ data ItemSnapshot = ItemSnapshot
 
    deriving (Show)
 
+
 compareSnapshot
   :: (Snapshot, Snapshot, Item)
   -> Maybe ItemSnapshot
@@ -441,6 +442,17 @@ instance ToJSON SnapEbayStatus where
   toJSON NoStatus = String "no_status"
 
 
+instance ToHTML SnapEbayStatus where
+    message SnapOn = "on ebay"
+    message SnapOff = "off ebay"
+    message NoStatus = "Item status could not be fetched"
+
+    color SnapOn = "color:green"
+    color SnapOff = "color:red"
+    color NoStatus = "color:blue"
+
+    mockSentence _ = ""
+
 -- ------------------------------------------------------------------------- --
 --              SNAPSHOT AVAILABILITY
 -- ------------------------------------------------------------------------- --
@@ -473,6 +485,18 @@ instance ToJSON SnapAvailability where
   toJSON NoAvailability = String "no_availability"
 
 
+instance ToHTML SnapAvailability where
+    message ItemAvailable = "Item available"
+    message ItemLow = "Item low"
+    message ItemOut = "Item not available"
+    message NoAvailability = "Item availability could not be fetched"
+
+    color ItemAvailable = "color:green"
+    color ItemLow = "color:orange"
+    color ItemOut = "color:red"
+    color NoAvailability = "color:blue"
+
+    mockSentence _ = "no sentence"
 -- ------------------------------------------------------------------------- --
 --              ENVIRONMENT
 -- ------------------------------------------------------------------------- --
