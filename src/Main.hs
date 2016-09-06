@@ -7,14 +7,14 @@ import Dropp.DataTypes
 import qualified Data.ByteString as By
 import Data.Yaml (decode)
 import System.Environment (getArgs)
-import Data.Maybe (fromJust)
 import Data.Text.Internal (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import System.IO (stdout)
-import Data.List
-  ( sort
-  , zip3)
+import Data.List (sort)
+import Data.Maybe
+  ( fromJust
+  , isJust)
 
 import Data.Text
   ( pack
@@ -90,6 +90,9 @@ main = do
     -- Compute snapshot diff.
     let snaps = map compareSnapshot $ zip3 (sort currentSnapshot) (sort previousSnapshot) (sort items)
 
+    -- Sort, filter and extract values from snapshots.
+    let snapshots = map fromJust $ filter isJust snaps
+
     -- Get timestamp.
     utcTime <- getCurrentTime
 
@@ -97,7 +100,7 @@ main = do
     let subText = pack $ "Availability " ++ formatTimeStamp utcTime
 
     -- Generate email HTML body.
-    let bodyText = toStrict $ decodeUtf8 $ formatOutput items
+    let bodyText = toStrict $ decodeUtf8 $ formatOutput snapshots
 
     -- Generate full report email.
     let email = makeEmail droppEnv subText bodyText
