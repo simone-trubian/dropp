@@ -65,8 +65,8 @@ formatItem item =
     li_
       $ ul_ [style_ "list-style-type:none; margin:10px 0"]
           ( renderItem item
-         <> renderEbayStatus item
-         <> renderAvailability item)
+         <> renderEbayStatus (ebayUrl item) (ebayStatus item)
+         <> renderAvailability (availability item))
 
 -- | Generate an HTML list item containing the item ID and item name.
 renderItem :: Monad m => Item -> HtmlT m ()
@@ -87,13 +87,13 @@ renderItem item = li_
 --
 -- The ebay status is also an achor with its page url as href. The color
 -- coding is achieved by modifying the style attribute of the <li> tag.
-renderEbayStatus :: Monad m => Item -> HtmlT m ()
-renderEbayStatus item =
+renderEbayStatus :: (Monad m, ToHTML a) => URL -> a -> HtmlT m ()
+renderEbayStatus url status =
     li_
         (a_
-         [ href_ (ebayUrl item)
-         , style_ $ "text-decoration:none; " `append` color (ebayStatus item)]
-         (toHtml (message $ ebayStatus item)))
+         [ href_ url
+         , style_ $ "text-decoration:none; " `append` color status]
+         (toHtml (message status)))
 
 
 -- | Generate an HTML list item containing a colour-coded availabilty string.
@@ -106,9 +106,9 @@ renderEbayStatus item =
 --
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
-renderAvailability :: Monad m => Item -> HtmlT m ()
-renderAvailability item = li_ [style_ (color $ availability item)]
-                              (toHtml $ message $ availability item)
+renderAvailability :: (Monad m, ToHTML a) => a -> HtmlT m ()
+renderAvailability ava = li_ [style_ (color ava)]
+                              (toHtml $ message ava)
 
 
 -- ------------------------------------------------------------------------- --
