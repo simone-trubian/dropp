@@ -119,7 +119,7 @@ renderEbayStatus url status =
 -- The color coding is achieved by modifying the style attribute of the <li>
 -- tag.
 renderAvailability :: (Monad m, ToHTML a) => a -> HtmlT m ()
-renderAvailability ava = p_ [style_ (color ava)]
+renderAvailability ava = span_ [style_ (color ava)]
                               (toHtml $ message ava)
 
 
