@@ -84,9 +84,6 @@ main = do
     items <- mapM (getItemUpdate mgr) dbItems
     let currentSnapshot = map itemToSnap items
 
-    -- Write snapshot to DB.
-    mapM_ (writeItemSnapshot mgr "http://localhost:3000/snapshot") currentSnapshot
-
     -- Compute snapshot diff.
     let snaps = map compareSnapshot $ zip3 (sort currentSnapshot) (sort previousSnapshot) (sort items)
 
@@ -107,6 +104,9 @@ main = do
 
     if sendEmail droppEnv
       then do
+
+        -- Write snapshot to DB.
+        mapM_ (writeItemSnapshot mgr "http://localhost:3000/snapshot") currentSnapshot
 
         -- Generate AWS environment and insantiate logger.
         env <- newEnv Ireland Discover
