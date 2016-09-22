@@ -208,12 +208,17 @@ instance ToHTML EbayStatus where
     mockSentence Off = "Questa inserzione è stata chiusa dal venditore perché l'oggetto non è più disponibile."
 
 
--- | Overloaded instance (Still unused) for decoding JSON to the data type.
+-- | Overloaded instance for decoding the Ebay client JSON to the data type.
 instance FromJSON EbayStatus where
-    parseJSON (String s) = case s of
-        "on" -> pure On
-        "off" -> pure Off
+    parseJSON (Object o) = case HML.lookup (pack "status") o of
+        Just (String s) -> parseString s
         _ -> empty
+
+        where
+          parseString s = case s of
+            "Ended" -> pure Off
+            "Active" -> pure On
+            _ -> empty
 
     parseJSON _ = empty
 
