@@ -1,5 +1,5 @@
 name: dropp
-version: 0.7.1
+version: 0.7.2
 synopsis: Drop shipping system.
 license: BSD3
 license-file: LICENSE
@@ -55,6 +55,7 @@ library
     , mtl >= 2.2.1 && <= 2.2.1
     , unordered-containers >= 0.2.7.0 && <= 0.2.7.0
     , exceptions >= 0.8.2.1
+    , zeromq4-haskell >= 0.6.5 && <= 0.6.5
 
 
   exposed-modules:
