@@ -1,2 +1,3 @@
 #pattern  filter=crypt diff=crypt
 settings/ebay.yaml  filter=crypt diff=crypt
+settings/settings.yaml  filter=crypt diff=crypt
