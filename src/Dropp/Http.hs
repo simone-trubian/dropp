@@ -20,6 +20,9 @@ import Control.Exception.Lifted (catch)
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans (lift)
 import qualified Data.ByteString as BS (ByteString)
+import qualified Data.ByteString.Lazy as BSL (fromStrict)
+import qualified Data.ByteString.Char8 as BS8 (unpack)
+import qualified Data.ByteString.Lazy.Char8 as LBS8 (pack)
 import qualified Data.ByteString.Lazy.Internal as LBS (ByteString)
 import Data.Text.Encoding (encodeUtf8)
 
@@ -70,6 +73,12 @@ import Text.Parsec
   , string
   , parse)
 
+import System.ZMQ4
+  ( Req
+  ,  Socket (..)
+  , send'
+  , receive)
+
 
 -- | Convenience alias of a Maybe transformer that wraps IO actions and
 -- returns a value of some type.
@@ -80,13 +89,14 @@ type MaybeIO = MaybeT IO
 -- The function performs two HTTP calls using an applicative style.
 getItemUpdate
     :: Manager -- ^Conduit HTTP manager.
+    -> Socket Req -- ^Zero MQ socket.
     -> Item -- ^Item record to be updated.
     -> IO Item -- ^IO action returning an updated item record.
 
-getItemUpdate mgr item =
+getItemUpdate mgr sock item =
     updateItem item <$>
     getAvailability mgr (sourceUrl item) <*>
-    getEbayStatus mgr (ebayUrl item)
+    getEbayStatusClient sock (ebayUrl item)
 
 
 
@@ -117,6 +127,20 @@ getEbayStatus
     -> IO (Maybe EbayStatus) -- ^IO computation returning a Maybe Ebay status.
 
 getEbayStatus mgr url = runMaybeT $ fetchHttp mgr url
+
+
+
+getEbayStatusClient
+    :: Socket Req
+    -> ID
+    -> IO (Maybe EbayStatus)
+
+getEbayStatusClient sock ident = do
+    let bsIdent = BSL.fromStrict (encodeUtf8 ident)
+    send' sock [] bsIdent
+    message <- receive sock
+    let bsMessage = LBS8.pack (BS8.unpack message)
+    return (decode bsMessage)
 
 
 
