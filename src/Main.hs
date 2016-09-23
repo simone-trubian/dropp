@@ -110,7 +110,11 @@ main = do
     let subText = pack $ "Availability " ++ formatTimeStamp utcTime
 
     -- Generate email HTML body.
-    let bodyText = toStrict $ decodeUtf8 $ formatOutput snapshots
+    bodyText <- if itemsReport droppEnv
+      then
+        return $ toStrict $ decodeUtf8 $ formatOutputItems items
+      else
+        return $ toStrict $ decodeUtf8 $ formatOutput snapshots
 
     -- Generate full report email.
     let email = makeEmail droppEnv subText bodyText

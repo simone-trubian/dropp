@@ -521,6 +521,10 @@ data DroppEnv = Env
     -- dumped to a file, set to False for testing and True for production.
   , sendEmail :: Bool
 
+    -- | Send an old style report email with the current status of all items
+    -- instead of a snapshot diff report.
+  , itemsReport :: Bool
+
     -- | Relative file path of the email dump file. This is not to be used in
     -- production but for testing only.
   , emailDumpFilePath :: String}

@@ -7,6 +7,7 @@
 -- <https://hackage.haskell.org/package/html-conduit html-conduit> libraries.
 module Dropp.HTML
   ( formatOutput
+  , formatOutputItems
   , formatItem
   , renderAvailability
   , renderEbayStatus
@@ -49,6 +50,13 @@ formatOutput items =
     renderBS
         $ ul_ [style_ "list-style-type:none; margin:10px 0"]
             $ mapM_ formatSnapItem items
+
+
+formatOutputItems :: [Item] -> ByteString
+formatOutputItems items =
+    renderBS
+        $ ul_ [style_ "list-style-type:none; margin:10px 0"]
+            $ mapM_ formatItem items
 
 
 formatSnapItem :: Monad m => ItemSnapshot -> HtmlT m ()
