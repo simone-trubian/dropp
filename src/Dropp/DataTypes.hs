@@ -541,3 +541,5 @@ data MimeType =
 
 
 type URL = Text
+
+type ID = Text
