@@ -60,7 +60,12 @@ import Control.Lens
   ( (&)
   , (.~))
 
-
+import System.ZMQ4
+  ( Req (..)
+  , context
+  , socket
+  , connect
+  , close)
 
 
 main :: IO ()
@@ -70,6 +75,11 @@ main = do
     [filePath] <- getArgs
     vars <- decode <$> By.readFile filePath :: IO (Maybe DroppEnv)
     let droppEnv = fromJust vars
+
+    -- Create Zero MQ conection
+    c <- context
+    s <- socket c Req
+    connect s "tcp://127.0.0.1:5555"
 
     -- Create connection manager
     mgr <- newManager tlsManagerSettings
@@ -81,8 +91,11 @@ main = do
     dbItems <- fromJust <$> getItems mgr (dbItemsUrl droppEnv)
 
     -- Fetch all pages listed in the DB table and generate snapshot.
-    items <- mapM (getItemUpdate mgr) dbItems
+    items <- mapM (getItemUpdate mgr s) dbItems
     let currentSnapshot = map itemToSnap items
+
+    -- Close Zero MQ connection
+    close s
 
     -- Compute snapshot diff.
     let snaps = map compareSnapshot $ zip3 (sort currentSnapshot) (sort previousSnapshot) (sort items)
