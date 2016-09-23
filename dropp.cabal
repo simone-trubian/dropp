@@ -84,6 +84,7 @@ executable dropp
     , yaml >= 0.8.16 && <= 0.8.16
     , bytestring >= 0.10.6.0 && <= 0.10.6.0
     , http-conduit >= 2.1.8 && <= 2.1.8
+    , zeromq4-haskell >= 0.6.5 && <= 0.6.5
 
 
 executable locserv
