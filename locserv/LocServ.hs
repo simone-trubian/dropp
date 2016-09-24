@@ -14,6 +14,7 @@ import Servant
 
 import Servant.Server
   ( Server
+  , Handler
   , serve)
 
 import Network.HTTP.Media
@@ -83,14 +84,14 @@ server = bangAv
     :<|> ebayStat
 
   where
-    bangAv :: Int -> EitherT ServantErr IO Availability
+    bangAv :: Int -> Handler Availability
     bangAv av
       | av >= 10 = return Available
       | av >= 5 && av < 10 = return (AvCount av)
       | av < 5 && av > 0 = return (Low av)
       | otherwise = return Out
 
-    ebayStat :: Bool -> EitherT ServantErr IO EbayStatus
+    ebayStat :: Bool -> Handler EbayStatus
     ebayStat isOn = return (if isOn then On else Off)
 
 
