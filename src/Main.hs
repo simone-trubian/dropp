@@ -85,7 +85,7 @@ main = do
     mgr <- newManager tlsManagerSettings
 
     -- Fetch previous snapshot.
-    previousSnapshot <- fromJust <$> getSnapshot mgr "http://localhost:3000/snapshot"
+    previousSnapshot <- fromJust <$> getSnapshot mgr (dbSnapshotUrl droppEnv)
 
     -- Fetch pages urls from DB.
     dbItems <- fromJust <$> getItems mgr (dbItemsUrl droppEnv)
@@ -123,7 +123,7 @@ main = do
       then do
 
         -- Write snapshot to DB.
-        mapM_ (writeItemSnapshot mgr "http://localhost:3000/snapshot") currentSnapshot
+        mapM_ (writeItemSnapshot mgr (dbSnapshotUrl droppEnv)) currentSnapshot
 
         -- Generate AWS environment and insantiate logger.
         env <- newEnv Ireland Discover

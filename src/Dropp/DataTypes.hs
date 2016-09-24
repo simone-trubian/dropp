@@ -517,6 +517,9 @@ data DroppEnv = Env
     -- | URL of the database endpoint returning the inital list of items.
   , dbItemsUrl :: Text
 
+    -- | URL of the database endpoint returning the inital list of items.
+  , dbSnapshotUrl :: Text
+
     -- | Flag that allows sending the report email. If false the email body is
     -- dumped to a file, set to False for testing and True for production.
   , sendEmail :: Bool
