@@ -37,10 +37,6 @@ type TestAPI = "bangHTML"
                 :> Capture "availabilityCount" Int
                 :> Get '[JSON] Availability
 
-          :<|> "ebay"
-               :> Capture "isOn" Bool
-               :> Get '[HTMLLucid] EbayStatus
-
 
 -- ------------------------------------------------------------------------- --
 --              HTML CLASSES IMPLEMENTATION
@@ -60,12 +56,6 @@ instance ToHtml Availability where
   toHtmlRaw = toHtml
 
 
-instance ToHtml EbayStatus where
-  toHtml = ebayMockPage
-
-  toHtmlRaw = toHtml
-
-
 -- ------------------------------------------------------------------------- --
 --              SERVER DEFINITION
 -- ------------------------------------------------------------------------- --
@@ -81,7 +71,6 @@ blockAPI = Proxy
 server :: Server TestAPI
 server = bangAv
     :<|> bangAv
-    :<|> ebayStat
 
   where
     bangAv :: Int -> Handler Availability
@@ -91,9 +80,18 @@ server = bangAv
       | av < 5 && av > 0 = return (Low av)
       | otherwise = return Out
 
-    ebayStat :: Bool -> Handler EbayStatus
-    ebayStat isOn = return (if isOn then On else Off)
-
 
 app :: Application
 app = serve blockAPI server
+
+
+-- ------------------------------------------------------------------------- --
+--              MOCK PAGES
+-- ------------------------------------------------------------------------- --
+
+-- | Return a minimal page containing only the title and availability.
+bangGoodMockPage :: Monad m => Availability -> HtmlT m ()
+bangGoodMockPage av =
+    html_ $ do
+      title_ (toHtml ("Mock Title" :: String))
+      body_ (div_ [class_ "status"] (toHtml (mockSentence av)))

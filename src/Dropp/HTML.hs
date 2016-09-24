@@ -10,9 +10,7 @@ module Dropp.HTML
   , formatOutputItems
   , formatItem
   , renderAvailability
-  , renderEbayStatus
-  , bangGoodMockPage
-  , ebayMockPage)
+  , renderEbayStatus)
   where
 
 
@@ -131,29 +129,6 @@ renderAvailability ava = span_ [style_ (color ava)]
                               (toHtml $ message ava)
 
 
--- ------------------------------------------------------------------------- --
---              MOCK PAGES
--- ------------------------------------------------------------------------- --
-
--- | Return a minimal page containing only the title and availability.
-bangGoodMockPage :: Monad m => Availability -> HtmlT m ()
-bangGoodMockPage av =
-    html_ $ do
-      title_ (toHtml ("Mock Title" :: String))
-      body_ (div_ [class_ "status"] (toHtml (mockSentence av)))
-
-
--- | Return a minimal Ebay mock page containing the disclaimer string depending
--- on the value of the EbayStatus parameter.
-ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
-ebayMockPage status =
-  html_
-    $ body_
-      $ span_ [class_ "statusLeftContent"]
-        $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
-        (toHtml $ mockSentence status)
-
-
 
 -- ------------------------------------------------------------------------- --
 --              SCRAPING
@@ -162,12 +137,6 @@ ebayMockPage status =
 -- parsing function.
 instance FromHTML Availability where
     decodeHTML = parseBangAva . makeCursor
-
-
--- | Implement the FromHTML interface by combining a cursor to the HTML
--- parsing function.
-instance FromHTML EbayStatus where
-    decodeHTML = parseEbayStatus . makeCursor
 
 
 -- | Extract the availability of a BangGood item page from the cursor opened on
@@ -191,30 +160,46 @@ parseBangAva cursor =
         child
 
 
-
--- | Extract the status of an item on its Ebay page.
-parseEbayStatus :: Cursor -> Maybe EbayStatus
-parseEbayStatus cursor =
-  case spans of
-    Just node -> isOn node
-    Nothing -> Nothing
-
-  where
-    spans =
-        headMay $
-        cursor $//
-        element "span" >=>
-        attributeIs "class" "msgTextAlign"
-
-    isOn node =
-      case content <$> headMay (child node) of
-        Just [] -> Nothing
-        Just ["Questo oggetto è esaurito."] -> Just Off
-        Just [_] -> Nothing
-        Just (_:_) -> Nothing
-        Nothing -> Just On
-
-
 -- | Generate a parsing cursor from an HTML page.
 makeCursor :: ByteString -> Cursor
 makeCursor = fromDocument . parseLBS
+
+
+
+-- -- | Implement the FromHTML interface by combining a cursor to the HTML
+-- -- parsing function.
+-- instance FromHTML EbayStatus where
+--     decodeHTML = parseEbayStatus . makeCursor
+
+-- -- | Extract the status of an item on its Ebay page.
+-- parseEbayStatus :: Cursor -> Maybe EbayStatus
+-- parseEbayStatus cursor =
+--   case spans of
+--     Just node -> isOn node
+--     Nothing -> Nothing
+--
+--   where
+--     spans =
+--         headMay $
+--         cursor $//
+--         element "span" >=>
+--         attributeIs "class" "msgTextAlign"
+--
+--     isOn node =
+--       case content <$> headMay (child node) of
+--         Just [] -> Nothing
+--         Just ["Questo oggetto è esaurito."] -> Just Off
+--         Just [_] -> Nothing
+--         Just (_:_) -> Nothing
+--         Nothing -> Just On
+
+
+-- -- | Return a minimal Ebay mock page containing the disclaimer string depending
+-- -- on the value of the EbayStatus parameter.
+-- ebayMockPage :: Monad m => EbayStatus -> HtmlT m ()
+-- ebayMockPage status =
+--   html_
+--     $ body_
+--       $ span_ [class_ "statusLeftContent"]
+--         $ span_ [id_ "w1-3-_msg", class_ "msgTextAlign"]
+--         (toHtml $ mockSentence status)

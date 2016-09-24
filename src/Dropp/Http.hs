@@ -120,13 +120,13 @@ getAvailability mgr url = runMaybeT $ fetchHttp mgr url
 
 
 
--- | Perform an HTTP GET request to fetch the source availability of the item.
-getEbayStatus
-    :: Manager -- ^Conduit HTTP manager.
-    -> URL -- ^URL to be fetched.
-    -> IO (Maybe EbayStatus) -- ^IO computation returning a Maybe Ebay status.
-
-getEbayStatus mgr url = runMaybeT $ fetchHttp mgr url
+-- -- | Perform an HTTP GET request to fetch the source availability of the item.
+-- getEbayStatus
+--     :: Manager -- ^Conduit HTTP manager.
+--     -> URL -- ^URL to be fetched.
+--     -> IO (Maybe EbayStatus) -- ^IO computation returning a Maybe Ebay status.
+--
+-- getEbayStatus mgr url = runMaybeT $ fetchHttp mgr url
 
 
 
