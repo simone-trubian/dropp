@@ -1,23 +1,27 @@
 import daemon
 import logging
 import argparse
+import yaml
 
 import zmq
 from ebaysdk.trading import Connection as Trading
 from ebaysdk.exception import ConnectionError
 
 
-def main():
+def main(settings):
+
+    domain = settings['domain']
+    socket_address = settings['socket_address']
+    ebay_config_file = settings['ebay_config_file']
 
     # Initialize ZMQ socket
     context = zmq.Context()
     socket = context.socket(zmq.REP)
-    socket.bind('tcp://127.0.0.1:5555')
+    socket.bind(socket_address)
 
-    domain = 'api.sandbox.ebay.com'
     api = Trading(
         domain=domain,
-        config_file='../settings/ebay.yaml'
+        config_file=ebay_config_file
     )
 
     while True:
@@ -25,8 +29,9 @@ def main():
             # Receive requests from ZMQ clients.
             ident = socket.recv_string()
             logging.debug('Received Ebay item ID:' + str(ident))
-        except KeyboardInterrupt:
-            logging.warning('Shutting down with ^C signal')
+        except (SystemExit, KeyboardInterrupt) as e:
+            logging.warning('Shutting down with %s signal' % repr(e))
+            socket.close()
             context.destroy()
             return
 
@@ -64,8 +69,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Configuration
+    with open('../settings/settings.yaml') as f:
+        settings = yaml.load(f)
+
+    settings = settings['ebay_daemon']
+
     if args.daemon:
         with daemon.DaemonContext():
-            main()
+            main(settings)
     else:
-        main()
+        main(settings)

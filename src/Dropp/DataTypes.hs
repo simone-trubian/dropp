@@ -532,10 +532,25 @@ data DroppEnv = Env
     -- production but for testing only.
   , emailDumpFilePath :: String}
 
-  deriving (Show, Generic)
+  deriving (Show)
 
-instance FromJSON DroppEnv
+instance FromJSON DroppEnv where
+    parseJSON (Object o) = case HML.lookup (pack "dropp") o of
+        Just (Object env) -> parseEnv env
+        _ -> empty
 
+        where
+          parseEnv env =
+            Env <$> env .: "recipients"
+                     <*> env .: "sender"
+                     <*> env .: "dbItemsUrl"
+                     <*> env .: "dbSnapshotUrl"
+                     <*> env .: "sendEmail"
+                     <*> env .: "itemsReport"
+                     <*> env .: "emailDumpFilePath"
+
+
+    parseJSON _ = empty
 
 -- ------------------------------------------------------------------------- --
 --              OTHER TYPES
