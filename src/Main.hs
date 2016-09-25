@@ -79,7 +79,7 @@ main = do
     -- Create Zero MQ conection
     c <- context
     s <- socket c Req
-    connect s "tcp://127.0.0.1:5555"
+    connect s $ unpack (ebayDaemonAddress droppEnv)
 
     -- Create connection manager
     mgr <- newManager tlsManagerSettings

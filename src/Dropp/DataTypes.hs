@@ -530,7 +530,11 @@ data DroppEnv = Env
 
     -- | Relative file path of the email dump file. This is not to be used in
     -- production but for testing only.
-  , emailDumpFilePath :: String}
+  , emailDumpFilePath :: String
+
+    -- | Address of the socket to which the Ebay daemon is bound.
+  , ebayDaemonAddress :: Text
+  }
 
   deriving (Show)
 
@@ -548,6 +552,15 @@ instance FromJSON DroppEnv where
                      <*> env .: "sendEmail"
                      <*> env .: "itemsReport"
                      <*> env .: "emailDumpFilePath"
+                     <*> getDaemonConf o
+
+          getDaemonConf o = case HML.lookup (pack "ebay_daemon") o of
+            Just (Object daemon) -> getAddress daemon
+            _ -> pure ""
+
+          getAddress daemon = case HML.lookup (pack "socket_address") daemon of
+            Just (String s) -> pure s
+            _ -> pure ""
 
 
     parseJSON _ = empty
