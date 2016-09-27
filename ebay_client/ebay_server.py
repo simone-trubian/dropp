@@ -54,7 +54,7 @@ def main(settings):
             'status': ebay_item['SellingStatus']['ListingStatus'],
         }
 
-        socket.send_json(dropp_item)
+        socket.send_json(ebay_item)
         logging.debug('Replying object for Ebay item ID:' + str(ident))
 
 if __name__ == '__main__':
