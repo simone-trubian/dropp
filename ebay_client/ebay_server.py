@@ -1,5 +1,6 @@
 import daemon
 import logging
+import logging.config
 import argparse
 import yaml
 
@@ -38,7 +39,7 @@ def get_quantity(obj):
         return obj.get('Quantity')
 
 
-def main(settings):
+def main(settings, logger):
 
     domain = settings['domain']
     socket_address = settings['socket_address']
@@ -58,9 +59,9 @@ def main(settings):
         try:
             # Receive requests from ZMQ clients.
             ident = socket.recv_string()
-            logging.debug('Received Ebay item ID:' + str(ident))
+            logger.debug('Received Ebay item ID:' + str(ident))
         except (SystemExit, KeyboardInterrupt) as e:
-            logging.warning('Shutting down with %s signal' % repr(e))
+            logger.warning('Shutting down with %s signal' % repr(e))
             socket.close()
             context.destroy()
             return
@@ -68,7 +69,7 @@ def main(settings):
         try:
             item_response = api.execute('GetItem', {'ItemID': ident})
         except ConnectionError as e:
-            logging.error(e)
+            logger.error(e)
             socket.send_json({'error': repr(e)})
             return
 
@@ -85,7 +86,7 @@ def main(settings):
         }
 
         socket.send_json(dropp_item)
-        logging.debug('Replying object for Ebay item ID:' + str(ident))
+        logger.debug('Replying object for Ebay item ID:' + str(ident))
 
 if __name__ == '__main__':
 
@@ -104,9 +105,11 @@ if __name__ == '__main__':
         settings = yaml.load(f)
 
     settings = settings['ebay_daemon']
+    logging.config.dictConfig(settings['logger'])
+    logger = logging.getLogger('dev')
 
     if args.daemon:
         with daemon.DaemonContext():
-            main(settings)
+            main(settings, logger)
     else:
-        main(settings)
+        main(settings, logger)
