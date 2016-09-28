@@ -216,7 +216,7 @@ instance FromJSON EbayStatus where
 
         where
           parseString s = case s of
-            "Ended" -> pure Off
+            "Inactive" -> pure Off
             "Active" -> pure On
             _ -> empty
 

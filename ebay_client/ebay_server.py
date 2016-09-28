@@ -8,6 +8,36 @@ from ebaysdk.trading import Connection as Trading
 from ebaysdk.exception import ConnectionError
 
 
+def get_status(obj):
+    """ Return if the item is indexed.
+
+    The function search for the exsistence of the optional field
+    ReasonHideFromSearch, if it is found it is assumed that the item is hidden
+    and therefore not active.
+    """
+    if obj.get('ReasonHideFromSearch'):
+        return 'Inactive'
+    else:
+        return 'Active'
+
+
+def get_quantity(obj):
+    """ Return the stock quantity of the item.
+
+    This function normalises a quirky behaviour of the trading API returning
+    amount of items left in stock.
+
+    It is not known if this is a bug or simply Ebay is shite but if an item is
+    available for sale the field `Quantity` returns the amount of items left in
+    stock as one would expect. If the item however is hidden the field returns
+    the number of items sold.
+    """
+    if obj.get('ReasonHideFromSearch'):
+        return 0
+    else:
+        return obj.get('Quantity')
+
+
 def main(settings):
 
     domain = settings['domain']
@@ -48,13 +78,13 @@ def main(settings):
             'name': ebay_item['Title'],
             'id': ebay_item['ItemID'],
             'url': ebay_item['ListingDetails']['ViewItemURL'],
-            'quantity': ebay_item['Quantity'],
+            'quantity': get_quantity(ebay_item),
             'current_price': ebay_item['SellingStatus']['CurrentPrice'],
             'quantity_sold': ebay_item['SellingStatus']['QuantitySold'],
-            'status': ebay_item['SellingStatus']['ListingStatus'],
+            'status': get_status(ebay_item)
         }
 
-        socket.send_json(ebay_item)
+        socket.send_json(dropp_item)
         logging.debug('Replying object for Ebay item ID:' + str(ident))
 
 if __name__ == '__main__':

@@ -12,8 +12,8 @@ id_list = [
     '152110086748',
     '152086931137',
     '152022486781',
-    #'110183593331',
-    #'110183691021',
+    # '110183593331',
+    # '110183691021',
 ]
 
 items = []
@@ -24,5 +24,5 @@ for ident in id_list:
 
 
 with open('dump.json', 'w') as file:
-    pp = pprint.PrettyPrinter(stream=file)
+    pp = pprint.PrettyPrinter()
     pp.pprint(items)
