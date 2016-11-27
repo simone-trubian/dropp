@@ -109,7 +109,8 @@ renderItem iId iUrl iName = li_
 renderEbayStatus :: (Monad m, ToHTML a) => URL -> a -> HtmlT m ()
 renderEbayStatus url status =
    a_
-    [ href_ url
+    [ href_ ("http://cgi.ebay.it/ws/eBayISAPI.dll?ViewItem&item="
+             `append` url `append` "&ssPageName=STRK:MESE:IT")
     , style_ $ "text-decoration:none; " `append` color status]
     (toHtml (message status))
 
