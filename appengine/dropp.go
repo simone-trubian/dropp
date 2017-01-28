@@ -7,6 +7,12 @@ import (
 	"net/http"
 )
 
+// API contains all data needed for the API
+type API struct {
+	CurrentUser *usr.User
+	LogoutURL   string
+}
+
 // Item models items sold by Dropp
 type Item struct {
 	SourceURL string
@@ -14,25 +20,77 @@ type Item struct {
 	ItemName  string
 }
 
+// Allowed users
+var allowedUsers map[string]bool
+var api *API
+
 func init() {
-	http.HandleFunc("/", handler)
+	allowedUsers = map[string]bool{
+		"simone.trubian@gmail.com": true,
+		"stoxx84@gmail.com":        true,
+		"test@example.com":         true,
+	}
+	api = newAPI()
+	http.Handle("/", api.authMiddleware(http.HandlerFunc(api.homePage)))
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	ctx := gae.NewContext(r)
-	w.Header().Set("Content-type", "text/html; charset=utf-8")
+func newAPI() *API {
+	return &API{}
+}
 
-	currentUser := usr.Current(ctx)
-	if currentUser == nil {
-		url, _ := usr.LoginURL(ctx, "/")
-		fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
-		return
-	} else {
-		url, _ := usr.LogoutURL(ctx, "/")
-		fmt.Fprintf(
-			w,
-			`Welcome, %s! (<a href="%s">sign out</a>)`,
-			currentUser,
-			url)
-	}
+func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(
+		w,
+		`Welcome, %s! (<a href="%s">sign out</a>)`,
+		a.CurrentUser,
+		a.LogoutURL)
+	return
+}
+
+func (a *API) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "text/html; charset=utf-8")
+		ctx := gae.NewContext(r)
+		currentUser := usr.Current(ctx)
+
+		// The user is not signed in, generate a sign-in URL
+		if currentUser == nil {
+			url, err := usr.LoginURL(ctx, "/")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
+			return
+		}
+
+		// The user is signed but not allowed to access the platform, ask them
+		// to log out and log in as another user, generate a sign-out URL
+		if !allowedUsers[currentUser.Email] {
+			url, err := usr.LogoutURL(ctx, "/")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprintf(
+				w,
+				`This user is not allowed in the platform, <a href="%s">sign in</a> as a different user`,
+				url)
+			return
+		}
+
+		// The user is signed in and allowed, serve the page and generate a
+		// sign-out URL
+		if allowedUsers[currentUser.Email] {
+			url, err := usr.LogoutURL(ctx, "/")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			a.CurrentUser = currentUser
+			a.LogoutURL = url
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
