@@ -32,11 +32,16 @@ func init() {
 		"test@example.com":         true,
 	}
 	api = newAPI()
-	http.Handle("/", api.recoverMiddleware(api.authMiddleware(http.HandlerFunc(api.homePage))))
+	http.Handle("/", api.registerMiddlewares(api.homePage))
 }
 
 func newAPI() *API {
 	return &API{}
+}
+
+func (a *API) registerMiddlewares(
+	handFunc func(w http.ResponseWriter, r *http.Request)) http.Handler {
+	return a.recoverMiddleware(a.authMiddleware(http.HandlerFunc(handFunc)))
 }
 
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
