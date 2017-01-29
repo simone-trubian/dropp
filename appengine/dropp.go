@@ -4,6 +4,7 @@ import (
 	"fmt"
 	gae "google.golang.org/appengine"
 	usr "google.golang.org/appengine/user"
+	tmpl "html/template"
 	"net/http"
 )
 
@@ -31,7 +32,7 @@ func init() {
 		"test@example.com":         true,
 	}
 	api = newAPI()
-	http.Handle("/", api.authMiddleware(http.HandlerFunc(api.homePage)))
+	http.Handle("/", api.recoverMiddleware(api.authMiddleware(http.HandlerFunc(api.homePage))))
 }
 
 func newAPI() *API {
@@ -39,12 +40,26 @@ func newAPI() *API {
 }
 
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(
-		w,
-		`Welcome, %s! (<a href="%s">sign out</a>)`,
-		a.CurrentUser,
-		a.LogoutURL)
-	return
+	t, err := tmpl.ParseFiles("templates/home.html")
+	if err != nil {
+		panic(err.Error())
+	}
+	err = t.Execute(w, a)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (a *API) recoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			rec := recover()
+			if rec != nil {
+				http.Error(w, rec.(string), http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (a *API) authMiddleware(next http.Handler) http.Handler {
@@ -57,8 +72,7 @@ func (a *API) authMiddleware(next http.Handler) http.Handler {
 		if currentUser == nil {
 			url, err := usr.LoginURL(ctx, "/")
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				panic(err.Error())
 			}
 			fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
 			return
@@ -69,8 +83,7 @@ func (a *API) authMiddleware(next http.Handler) http.Handler {
 		if !allowedUsers[currentUser.Email] {
 			url, err := usr.LogoutURL(ctx, "/")
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				panic(err.Error())
 			}
 			fmt.Fprintf(
 				w,
@@ -84,8 +97,7 @@ func (a *API) authMiddleware(next http.Handler) http.Handler {
 		if allowedUsers[currentUser.Email] {
 			url, err := usr.LogoutURL(ctx, "/")
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				panic(err.Error())
 			}
 			a.CurrentUser = currentUser
 			a.LogoutURL = url
