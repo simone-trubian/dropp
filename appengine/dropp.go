@@ -80,7 +80,7 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
-	err = t.Execute(w, a)
+	err = t.Execute(w, homeData)
 	if err != nil {
 		panic(err.Error())
 	}

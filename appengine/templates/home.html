@@ -8,11 +8,17 @@
     <link rel="stylesheet" href="static/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="static/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.13/css/jquery.dataTables.css">
     <script
       src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js">
     </script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.13/js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
-
+		<script type="text/javascript" charset="utf-8">
+			$(document).ready(function() {
+				$('#items').DataTable();
+			} );
+		</script>
     <title>Welcome to Dropp</title>
   </head>
   <body>
@@ -39,5 +45,41 @@
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
     </nav>
+
+
+    <div class="container">
+      <div class="row">
+        {{.Items}}
+      </div>
+    </div>
+
+    <div class="container">
+      <table id="items">
+        <thead>
+          <tr role="row">
+            <th>Column 1</th>
+            <th>Column 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr role="row">
+            <td>Row 1 Data 1</td>
+            <td>Row 1 Data 2</td>
+          </tr>
+          <tr role="row">
+            <td>Row 2 Data 1</td>
+            <td>Row 2 Data 2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script type="text/javascript">
+    	// For demo to fit into DataTables site builder...
+    	$('#items')
+    		.removeClass( 'display' )
+    		.addClass('table table-striped table-bordered');
+    </script>
+
   </body>
 </html>
