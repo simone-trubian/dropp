@@ -22,6 +22,20 @@ type Item struct {
 	ItemName  string
 }
 
+// HomeData contains all data needed by the home page template
+type HomeData struct {
+	CurrentUser *usr.User
+	LogoutURL   string
+	Items       int
+}
+
+func (a *API) newHomeData() HomeData {
+	return HomeData{
+		CurrentUser: a.CurrentUser,
+		LogoutURL:   a.LogoutURL,
+	}
+}
+
 // Allowed users
 var allowedUsers map[string]bool
 var api *API
@@ -57,6 +71,11 @@ func (a *API) dummyPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+	itemCount, _ := db.NewQuery("Item").Count(ctx)
+	homeData := a.newHomeData()
+	homeData.Items = itemCount
+
 	t, err := tmpl.ParseFiles("templates/home.html")
 	if err != nil {
 		panic(err.Error())

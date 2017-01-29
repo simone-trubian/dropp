@@ -6,15 +6,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="static/css/foundation.min.css">
     <link rel="stylesheet" href="static/css/font-awesome.min.css">
+    <script type="text/javascript" src="static/js/vendor/foundation.min.js"></script>
+    <script type="text/javascript" src="static/js/vendor/jquery.js"></script>
     <title>Welcome to Dropp</title>
   </head>
   <body>
+
     <div data-sticky-container>
-      <div class="title-bar" data-sticky data-options="marginTop:0;" style="width:100%">
-        <div class="title-bar-left">Welcome to Dropp</div>
-        <div class="title-bar-right">
-            {{.CurrentUser}} <a href="{{.LogoutURL}}"><i class="fa fa-sign-out fa-lg"></i></a>
-        </div>
+      <div
+        class="sticky"
+        id="main-navbar"
+        data-sticky data-margin-top="0"
+        style="width:100%;"
+        data-margin-bottom="0"
+        data-top-anchor="topAnchorExample"
+        data-btm-anchor="bottomOfContentId:bottom"
+      >
+
+        <nav data-magellan>
+          <ul class="horizontal menu expanded">
+            <li> <div class="title-bar-left">Welcome to Dropp</div> </li>
+            <li><a class="button" href="/">Home Page</a></li>
+            <li><a class="button" href="/add">Add dummy item</a></li>
+            <li>
+              <a class="button" href="{{.LogoutURL}}">
+                <i class="fa fa-sign-out fa-lg"></i>
+              </a>
+            </li>
+            <li><div class="title-bar-right"> {{.CurrentUser}}</div></li>
+          </ul>
+        </nav>
       </div>
     </div>
   </body>
