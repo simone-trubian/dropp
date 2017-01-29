@@ -4,39 +4,40 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/css/foundation.min.css">
+
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="static/css/font-awesome.min.css">
-    <script type="text/javascript" src="static/js/vendor/foundation.min.js"></script>
-    <script type="text/javascript" src="static/js/vendor/jquery.js"></script>
+    <script
+      src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js">
+    </script>
+    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+
     <title>Welcome to Dropp</title>
   </head>
   <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
 
-    <div data-sticky-container>
-      <div
-        class="sticky"
-        id="main-navbar"
-        data-sticky data-margin-top="0"
-        style="width:100%;"
-        data-margin-bottom="0"
-        data-top-anchor="topAnchorExample"
-        data-btm-anchor="bottomOfContentId:bottom"
-      >
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#"><i>DROPP</i></a>
+        </div>
 
-        <nav data-magellan>
-          <ul class="horizontal menu expanded">
-            <li> <div class="title-bar-left">Welcome to Dropp</div> </li>
-            <li><a class="button" href="/">Home Page</a></li>
-            <li><a class="button" href="/add">Add dummy item</a></li>
-            <li>
-              <a class="button" href="{{.LogoutURL}}">
-                <i class="fa fa-sign-out fa-lg"></i>
-              </a>
-            </li>
-            <li><div class="title-bar-right"> {{.CurrentUser}}</div></li>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="/">Items</a></li>
+            <li><a href="/add">Add Item</a></li>
           </ul>
-        </nav>
-      </div>
-    </div>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">{{.CurrentUser}}</a></li>
+            <li><a href="#">
+                <i class="fa fa-sign-out fa-lg"></i>
+            </a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
   </body>
 </html>
