@@ -1,8 +1,20 @@
-<html>
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
   <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/css/foundation.min.css">
     <title>Welcome to Dropp</title>
   </head>
   <body>
-      <p>Welcome {{.CurrentUser}}! <a href=".LogoutURL">sign out</a></p>
+    <div data-sticky-container>
+      <div class="title-bar" data-sticky data-options="marginTop:0;" style="width:100%">
+        <div class="title-bar-left">Welcome to Dropp</div>
+        <div class="title-bar-right">
+            {{.CurrentUser}}! <a href=".LogoutURL">sign out</a>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
