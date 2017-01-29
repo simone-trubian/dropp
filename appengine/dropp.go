@@ -26,13 +26,14 @@ type Item struct {
 type HomeData struct {
 	CurrentUser *usr.User
 	LogoutURL   string
-	Items       int
+	Items       *[]Item
 }
 
 func (a *API) newHomeData() HomeData {
 	return HomeData{
 		CurrentUser: a.CurrentUser,
 		LogoutURL:   a.LogoutURL,
+		//Items:       make([]Item, 10, 10),
 	}
 }
 
@@ -72,9 +73,10 @@ func (a *API) dummyPost(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
-	itemCount, _ := db.NewQuery("Item").Count(ctx)
 	homeData := a.newHomeData()
-	homeData.Items = itemCount
+	items := make([]Item, 0, 10)
+	_, err := db.NewQuery("Item").GetAll(ctx, &items)
+	homeData.Items = &items
 
 	t, err := tmpl.ParseFiles("templates/home.html")
 	if err != nil {

@@ -46,30 +46,23 @@
       </div><!-- /.container-fluid -->
     </nav>
 
-
-    <div class="container">
-      <div class="row">
-        {{.Items}}
-      </div>
-    </div>
-
     <div class="container">
       <table id="items">
         <thead>
           <tr role="row">
-            <th>Column 1</th>
-            <th>Column 2</th>
+            <th>Source URL</th>
+            <th>Ebay ID</th>
+            <th>Item name</th>
           </tr>
         </thead>
         <tbody>
-          <tr role="row">
-            <td>Row 1 Data 1</td>
-            <td>Row 1 Data 2</td>
-          </tr>
-          <tr role="row">
-            <td>Row 2 Data 1</td>
-            <td>Row 2 Data 2</td>
-          </tr>
+          {{range .Items}}
+            <tr role="row">
+              <td>{{.SourceURL}}</td>
+              <td>{{.EbayID}}</td>
+              <td>{{.ItemName}}</td>
+            </tr>
+          {{end}}
         </tbody>
       </table>
     </div>
