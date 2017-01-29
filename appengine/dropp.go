@@ -3,6 +3,7 @@ package dropp
 import (
 	"fmt"
 	gae "google.golang.org/appengine"
+	db "google.golang.org/appengine/datastore"
 	usr "google.golang.org/appengine/user"
 	tmpl "html/template"
 	"net/http"
@@ -17,7 +18,7 @@ type API struct {
 // Item models items sold by Dropp
 type Item struct {
 	SourceURL string
-	EbayURL   string
+	EbayID    string
 	ItemName  string
 }
 
@@ -33,15 +34,26 @@ func init() {
 	}
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
+	http.Handle("/add", api.registerMiddlewares(api.dummyPost))
 }
 
 func newAPI() *API {
 	return &API{}
 }
 
-func (a *API) registerMiddlewares(
-	handFunc func(w http.ResponseWriter, r *http.Request)) http.Handler {
-	return a.recoverMiddleware(a.authMiddleware(http.HandlerFunc(handFunc)))
+func (a *API) dummyPost(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+	item := &Item{
+		SourceURL: "blalbalba.com",
+		EbayID:    "10003420",
+		ItemName:  "Dummy Item",
+	}
+	key := db.NewIncompleteKey(ctx, "Item", nil)
+	_, err := db.Put(ctx, key, item)
+	if err != nil {
+		panic(err.Error())
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +65,11 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func (a *API) registerMiddlewares(
+	handFunc func(w http.ResponseWriter, r *http.Request)) http.Handler {
+	return a.recoverMiddleware(a.authMiddleware(http.HandlerFunc(handFunc)))
 }
 
 func (a *API) recoverMiddleware(next http.Handler) http.Handler {

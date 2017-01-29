@@ -5,6 +5,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="static/css/foundation.min.css">
+    <link rel="stylesheet" href="static/css/font-awesome.min.css">
     <title>Welcome to Dropp</title>
   </head>
   <body>
@@ -12,7 +13,7 @@
       <div class="title-bar" data-sticky data-options="marginTop:0;" style="width:100%">
         <div class="title-bar-left">Welcome to Dropp</div>
         <div class="title-bar-right">
-            {{.CurrentUser}}! <a href=".LogoutURL">sign out</a>
+            {{.CurrentUser}} <a href="{{.LogoutURL}}"><i class="fa fa-sign-out fa-lg"></i></a>
         </div>
       </div>
     </div>
