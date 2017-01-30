@@ -2,13 +2,18 @@ package dropp
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"regexp"
+	"strconv"
+	"time"
+
+	gq "github.com/PuerkitoBio/goquery"
 	gae "google.golang.org/appengine"
 	db "google.golang.org/appengine/datastore"
 	ufe "google.golang.org/appengine/urlfetch"
 	usr "google.golang.org/appengine/user"
 	tmpl "html/template"
-	"log"
-	"net/http"
 )
 
 // API contains all data needed for the API
@@ -22,6 +27,15 @@ type Item struct {
 	SourceURL string
 	EbayID    string
 	ItemName  string
+}
+
+// Snapshot contains a snapshot of the current status of an item.
+type Snapshot struct {
+	//Item        *Item
+	Avaliabilty string
+	AvCount     int
+	OnEbay      bool
+	CreatedAt   time.Time
 }
 
 // HomeData contains all data needed by the home page template
@@ -52,6 +66,7 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/add", api.registerMiddlewares(api.dummyPost))
+	http.Handle("/bg", api.registerMiddlewares(api.fetchBGAva))
 }
 
 func newAPI() *API {
@@ -91,13 +106,55 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) fetchBGAva(w http.ResponseWriter, r *http.Request) {
+
+	// Fetch the page
 	ctx := gae.NewContext(r)
 	client := ufe.Client(ctx)
-	resp, err := client.Get("http://google.com")
+	resp, err := client.Get("http://eu.banggood.com/Wholesale-Warehouse-12V-4CH-Channel-315Mhz-Wireless-Remote-Control-Switch-wp-Eu-960985.html")
 	if err != nil {
 		panic(err.Error())
 	}
-	log.Printf("Status code %d", resp.StatusCode)
+
+	snap := &Snapshot{}
+	snap.OnEbay = false
+	snap.CreatedAt = time.Now()
+	snap.getBGAva(resp)
+	key := db.NewIncompleteKey(ctx, "Snapshot", nil)
+	_, err = db.Put(ctx, key, snap)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (snap *Snapshot) getBGAva(response *http.Response) {
+	// Scrape the page and get availability
+	doc, err := gq.NewDocumentFromResponse(response)
+	if err != nil {
+		panic(err.Error())
+	}
+	ava := doc.Find(".status").Text()
+	switch ava {
+	case "Currently out of stock":
+		snap.Avaliabilty = "Out"
+		snap.AvCount = 0
+		log.Print("out")
+		return
+	case "In stock, usually dispatched in 1 business day":
+		snap.Avaliabilty = "Available"
+		log.Print("available")
+		return
+	}
+	rx, _ := regexp.Compile("[0-9]+")
+	avaCount, _ := strconv.Atoi(rx.FindStringSubmatch(ava)[0])
+	if avaCount <= 5 {
+		snap.Avaliabilty = "Low"
+		snap.AvCount = avaCount
+		log.Print("low")
+		return
+	}
+	snap.Avaliabilty = "Available"
+	snap.AvCount = avaCount
+	log.Print("available with number")
 	return
 }
 
