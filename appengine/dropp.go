@@ -4,8 +4,10 @@ import (
 	"fmt"
 	gae "google.golang.org/appengine"
 	db "google.golang.org/appengine/datastore"
+	ufe "google.golang.org/appengine/urlfetch"
 	usr "google.golang.org/appengine/user"
 	tmpl "html/template"
+	"log"
 	"net/http"
 )
 
@@ -86,6 +88,17 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func (a *API) fetchBGAva(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+	client := ufe.Client(ctx)
+	resp, err := client.Get("http://google.com")
+	if err != nil {
+		panic(err.Error())
+	}
+	log.Printf("Status code %d", resp.StatusCode)
+	return
 }
 
 func (a *API) registerMiddlewares(
