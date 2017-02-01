@@ -27,7 +27,9 @@ type Item struct {
 	SourceURL string
 	EbayID    string
 	ItemName  string
-	Active    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	IsActive  bool
 }
 
 // Snapshot contains a snapshot of the current status of an item.
@@ -65,7 +67,7 @@ func init() {
 	}
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
-	http.Handle("/add", api.registerMiddlewares(api.dummyPost))
+	http.Handle("/item", api.registerMiddlewares(api.item))
 	http.Handle("/bg", api.registerMiddlewares(api.fetchBGAva))
 }
 
@@ -73,14 +75,25 @@ func newAPI() *API {
 	return &API{}
 }
 
-func (a *API) dummyPost(w http.ResponseWriter, r *http.Request) {
+func (a *API) item(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
+
 	item := &Item{
-		SourceURL: "blalbalba.com",
-		EbayID:    "10003420",
-		ItemName:  "Dummy Item",
+		SourceURL: r.FormValue("item-url-input"),
+		EbayID:    r.FormValue("item-ebay-id-input"),
+		ItemName:  r.FormValue("item-name-input"),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
-	key := db.NewIncompleteKey(ctx, "Item", nil)
+
+	isActiveInput := r.FormValue("item-is-active-input")
+	if isActiveInput == "yes" {
+		item.IsActive = true
+	} else {
+		item.IsActive = false
+	}
+
+	key := db.NewKey(ctx, "Item", r.FormValue("item-source-name"), 0, nil)
 	_, err := db.Put(ctx, key, item)
 	if err != nil {
 		panic(err.Error())
@@ -110,17 +123,19 @@ func (a *API) fetchBGAva(w http.ResponseWriter, r *http.Request) {
 	// Fetch the page
 	ctx := gae.NewContext(r)
 	client := ufe.Client(ctx)
-	resp, err := client.Get("http://eu.banggood.com/Wholesale-Warehouse-12V-4CH-Channel-315Mhz-Wireless-Remote-Control-Switch-wp-Eu-960985.html")
+	itemURL := r.FormValue("item-url")
+	resp, err := client.Get(itemURL)
 	if err != nil {
 		panic(err.Error())
 	}
 
+	itemKey := db.NewKey(ctx, "Item", itemURL, 0, nil)
 	snap := &Snapshot{}
 	snap.OnEbay = false
 	snap.CreatedAt = time.Now()
 	snap.getBGAva(resp)
-	key := db.NewIncompleteKey(ctx, "Snapshot", nil)
-	_, err = db.Put(ctx, key, snap)
+	snapKey := db.NewIncompleteKey(ctx, "Snapshot", itemKey)
+	_, err = db.Put(ctx, snapKey, snap)
 	if err != nil {
 		panic(err.Error())
 	}

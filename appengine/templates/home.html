@@ -72,25 +72,25 @@
     </div>
 
     <div class="container">
-      <form>
+      <form action="/item" method="post">
         <div class="form-group row">
           <label for="item-name-input" class="col-2 col-form-label">Item Name</label>
           <div class="col-10">
-            <input class="form-control" type="text" value="Drill bits kit" id="item-name-input">
+            <input class="form-control" type="text" placeholder="Drill bits kit" id="item-name-input" name="item-name-input" value="">
           </div>
         </div>
 
         <div class="form-group row">
           <label for="item-url-input" class="col-2 col-form-label">Item Source URL</label>
           <div class="col-10">
-            <input class="form-control" type="url" value="https://getbootstrap.com" id="item-url-input">
+            <input class="form-control" type="url" placeholder="https://getbootstrap.com" name="item-url-input" id="item-url-input" value="">
           </div>
         </div>
 
         <div class="form-group row">
           <label for="item-ebay-id-input" class="col-2 col-form-label">Item Ebay ID</label>
           <div class="col-10">
-            <input class="form-control" type="number" value="42" id="item-ebay-id-input">
+            <input class="form-control" type="number" value="" placeholder="42" name="item-ebay-id-input" id="item-ebay-id-input">
           </div>
         </div>
 
@@ -104,13 +104,13 @@
 
           <div class="form-check form-check-inline">
             <label class="form-check-label">
-              <input class="form-check-input" type="radio" name="inlineRadioOptions" id="item-active-true" value="true"> yes
+              <input class="form-check-input" type="radio" name="item-is-active-input" id="item-is-active-true" value="yes"> yes
             </label>
           </div>
 
           <div class="form-check form-check-inline">
             <label class="form-check-label">
-              <input class="form-check-input" type="radio" name="inlineRadioOptions" id="item-active-false" value="false"> no
+              <input class="form-check-input" type="radio" name="item-is-active-input" id="item-active-false" value="no"> no
             </label>
           </div>
         </div>
