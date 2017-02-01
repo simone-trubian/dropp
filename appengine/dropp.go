@@ -27,11 +27,11 @@ type Item struct {
 	SourceURL string
 	EbayID    string
 	ItemName  string
+	Active    bool
 }
 
 // Snapshot contains a snapshot of the current status of an item.
 type Snapshot struct {
-	//Item        *Item
 	Avaliabilty string
 	AvCount     int
 	OnEbay      bool
