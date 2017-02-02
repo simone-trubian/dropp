@@ -11,6 +11,7 @@ import (
 	gq "github.com/PuerkitoBio/goquery"
 	gae "google.golang.org/appengine"
 	db "google.golang.org/appengine/datastore"
+	tq "google.golang.org/appengine/taskqueue"
 	ufe "google.golang.org/appengine/urlfetch"
 	usr "google.golang.org/appengine/user"
 	tmpl "html/template"
@@ -37,6 +38,7 @@ type Snapshot struct {
 	Avaliabilty string
 	AvCount     int
 	OnEbay      bool
+	Price       float64
 	CreatedAt   time.Time
 }
 
@@ -51,7 +53,6 @@ func (a *API) newHomeData() HomeData {
 	return HomeData{
 		CurrentUser: a.CurrentUser,
 		LogoutURL:   a.LogoutURL,
-		//Items:       make([]Item, 10, 10),
 	}
 }
 
@@ -68,7 +69,8 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
-	http.Handle("/bg", api.registerMiddlewares(api.fetchBGAva))
+	http.Handle("/create_snapshot", api.registerMiddlewares(api.createSnapshot))
+	http.Handle("/update_single_snapshot", api.registerMiddlewares(api.updateSingleSnapshot))
 }
 
 func newAPI() *API {
@@ -118,12 +120,24 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *API) fetchBGAva(w http.ResponseWriter, r *http.Request) {
+func (a *API) updateSingleSnapshot(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+	itemURL := r.FormValue("item-url")
+	task := tq.NewPOSTTask(
+		"/create_snapshot", map[string][]string{"item-url": {itemURL}})
+
+	_, err := tq.Add(ctx, task, "")
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (a *API) createSnapshot(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch the page
 	ctx := gae.NewContext(r)
-	client := ufe.Client(ctx)
 	itemURL := r.FormValue("item-url")
+	client := ufe.Client(ctx)
 	resp, err := client.Get(itemURL)
 	if err != nil {
 		panic(err.Error())
