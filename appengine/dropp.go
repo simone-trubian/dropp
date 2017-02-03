@@ -126,10 +126,17 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
 
-	task := tq.NewPOSTTask(
+	createSnapshotsTask := tq.NewPOSTTask(
 		"/create_snapshot", map[string][]string{})
 
-	registeredTask, err := tq.Add(ctx, task, "default")
+	checkTaskCompleted := tq.NewPOSTTask(
+		"/check_snapshot_task", map[string][]string{"task_name": {"default"}})
+
+	registeredTask, err := tq.AddMulti(
+		ctx,
+		[]tq.Task{*createSnapshotsTask, *checkTaskCompleted},
+		"default")
+
 	if err != nil {
 		log.Printf("Error while trying to add task: %s", err)
 	} else {
