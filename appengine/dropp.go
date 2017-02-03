@@ -70,10 +70,10 @@ func init() {
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
 	http.Handle(
-		"/update_all_snapshots", api.registerMiddlewares(api.updateAllSnapshots))
+		"/create_snapshots_task", api.registerMiddlewares(api.createSnapshotsTasks))
 	http.Handle(
-		"/create_snapshot",
-		api.recoverMiddleware(http.HandlerFunc(api.createSnapshot)))
+		"/create_snapshots",
+		api.recoverMiddleware(http.HandlerFunc(api.createSnapshots)))
 }
 
 func newAPI() *API {
@@ -123,65 +123,46 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *API) updateAllSnapshots(w http.ResponseWriter, r *http.Request) {
+func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
-	items := make([]Item, 0, 10)
-	_, err := db.NewQuery("Item").GetAll(ctx, &items)
 
-	for _, item := range items {
-		task := tq.NewPOSTTask(
-			"/create_snapshot", map[string][]string{"item-url": {item.SourceURL}})
-
-		registeredTask, err := tq.Add(ctx, task, "default")
-		if err != nil {
-			log.Printf("Error while trying to add task: %s", err)
-		} else {
-			log.Printf("Starting new update snapshot task %s", registeredTask.Name)
-		}
-	}
-
-	if err != nil {
-		panic(err.Error())
-	}
-}
-
-func (a *API) updateSingleSnapshot(w http.ResponseWriter, r *http.Request) {
-	ctx := gae.NewContext(r)
-	itemURL := "http://eu.banggood.com/Wholesale-Warehouse-6pc-HSS-Circular-Saw-Blade-Set-For-Metal-Dremel-Rotary-Tools-wp-Eu-918020.html" //r.FormValue("item-url")
 	task := tq.NewPOSTTask(
-		"/create_snapshot", map[string][]string{"item-url": {itemURL}})
+		"/create_snapshot", map[string][]string{})
 
 	registeredTask, err := tq.Add(ctx, task, "default")
+	if err != nil {
+		log.Printf("Error while trying to add task: %s", err)
+	} else {
+		log.Printf("Starting new update snapshot task %s", registeredTask.Name)
+	}
 
-	log.Printf(
-		"Starting new update single snapshot task %s with delay %s",
-		registeredTask.Name,
-		registeredTask.Delay.String())
 	if err != nil {
 		panic(err.Error())
 	}
-	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func (a *API) createSnapshot(w http.ResponseWriter, r *http.Request) {
+func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch the page
 	ctx := gae.NewContext(r)
-	itemURL := r.FormValue("item-url")
-	log.Printf("Updating snapshot for item %s", itemURL)
-	client := ufe.Client(ctx)
-	resp, err := client.Get(itemURL)
-	if err != nil {
-		panic(err.Error())
-	}
+	items := make([]Item, 0, 10)
+	_, err := db.NewQuery("Item").GetAll(ctx, &items)
+	for _, item := range items {
+		log.Printf("Updating snapshot for item %s", item.SourceURL)
+		client := ufe.Client(ctx)
+		resp, err := client.Get(item.SourceURL)
+		if err != nil {
+			panic(err.Error())
+		}
 
-	itemKey := db.NewKey(ctx, "Item", itemURL, 0, nil)
-	snap := &Snapshot{}
-	snap.OnEbay = false
-	snap.CreatedAt = time.Now()
-	snap.getBGAva(resp)
-	snapKey := db.NewIncompleteKey(ctx, "Snapshot", itemKey)
-	_, err = db.Put(ctx, snapKey, snap)
+		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
+		snap := &Snapshot{}
+		snap.OnEbay = false
+		snap.CreatedAt = time.Now()
+		snap.getBGAva(resp)
+		snapKey := db.NewIncompleteKey(ctx, "Snapshot", itemKey)
+		_, err = db.Put(ctx, snapKey, snap)
+	}
 	if err != nil {
 		panic(err.Error())
 	}
