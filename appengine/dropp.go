@@ -69,8 +69,11 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
-	http.Handle("/create_snapshot", api.recoverMiddleware(http.HandlerFunc(api.createSnapshot)))
-	http.Handle("/update_single_snapshot", api.registerMiddlewares(api.updateSingleSnapshot))
+	http.Handle(
+		"/update_all_snapshots", api.registerMiddlewares(api.updateAllSnapshots))
+	http.Handle(
+		"/create_snapshot",
+		api.recoverMiddleware(http.HandlerFunc(api.createSnapshot)))
 }
 
 func newAPI() *API {
@@ -115,6 +118,28 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 	err = t.Execute(w, homeData)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (a *API) updateAllSnapshots(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+	items := make([]Item, 0, 10)
+	_, err := db.NewQuery("Item").GetAll(ctx, &items)
+
+	for _, item := range items {
+		task := tq.NewPOSTTask(
+			"/create_snapshot", map[string][]string{"item-url": {item.SourceURL}})
+
+		registeredTask, err := tq.Add(ctx, task, "default")
+		if err != nil {
+			log.Printf("Error while trying to add task: %s", err)
+		} else {
+			log.Printf("Starting new update snapshot task %s", registeredTask.Name)
+		}
+	}
+
 	if err != nil {
 		panic(err.Error())
 	}
