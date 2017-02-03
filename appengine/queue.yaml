@@ -1,5 +1,0 @@
-queue:
-- name: default
-  target: module
-  rate: 1/s
-  max_concurrent_requests: 10

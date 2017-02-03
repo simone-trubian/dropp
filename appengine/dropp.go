@@ -69,7 +69,7 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
-	http.Handle("/create_snapshot", api.registerMiddlewares(api.createSnapshot))
+	http.Handle("/create_snapshot", api.recoverMiddleware(http.HandlerFunc(api.createSnapshot)))
 	http.Handle("/update_single_snapshot", api.registerMiddlewares(api.updateSingleSnapshot))
 }
 
@@ -122,14 +122,20 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) updateSingleSnapshot(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
-	itemURL := r.FormValue("item-url")
+	itemURL := "http://eu.banggood.com/Wholesale-Warehouse-6pc-HSS-Circular-Saw-Blade-Set-For-Metal-Dremel-Rotary-Tools-wp-Eu-918020.html" //r.FormValue("item-url")
 	task := tq.NewPOSTTask(
 		"/create_snapshot", map[string][]string{"item-url": {itemURL}})
 
-	_, err := tq.Add(ctx, task, "")
+	registeredTask, err := tq.Add(ctx, task, "default")
+
+	log.Printf(
+		"Starting new update single snapshot task %s with delay %s",
+		registeredTask.Name,
+		registeredTask.Delay.String())
 	if err != nil {
 		panic(err.Error())
 	}
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (a *API) createSnapshot(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +143,7 @@ func (a *API) createSnapshot(w http.ResponseWriter, r *http.Request) {
 	// Fetch the page
 	ctx := gae.NewContext(r)
 	itemURL := r.FormValue("item-url")
+	log.Printf("Updating snapshot for item %s", itemURL)
 	client := ufe.Client(ctx)
 	resp, err := client.Get(itemURL)
 	if err != nil {
