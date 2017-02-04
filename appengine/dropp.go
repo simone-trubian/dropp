@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	gq "github.com/PuerkitoBio/goquery"
@@ -74,6 +75,9 @@ func init() {
 	http.Handle(
 		"/create_snapshots",
 		api.recoverMiddleware(http.HandlerFunc(api.createSnapshots)))
+	http.Handle(
+		"/check_snapshots",
+		api.recoverMiddleware(http.HandlerFunc(api.checkSnapshots)))
 }
 
 func newAPI() *API {
@@ -127,25 +131,27 @@ func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
 
 	createSnapshotsTask := tq.NewPOSTTask(
-		"/create_snapshot", map[string][]string{})
+		"/create_snapshots", map[string][]string{})
 
 	checkTaskCompleted := tq.NewPOSTTask(
-		"/check_snapshot_task", map[string][]string{"task_name": {"default"}})
+		"/check_snapshots", map[string][]string{"task_name": {"default"}})
 
-	registeredTask, err := tq.AddMulti(
-		ctx,
-		[]tq.Task{*createSnapshotsTask, *checkTaskCompleted},
-		"default")
+	allTasks := []*tq.Task{createSnapshotsTask, checkTaskCompleted}
+	_, err := tq.AddMulti(ctx, allTasks, "default")
 
 	if err != nil {
 		log.Printf("Error while trying to add task: %s", err)
 	} else {
-		log.Printf("Starting new update snapshot task %s", registeredTask.Name)
+		log.Printf("Starting new update snapshot task %s", createSnapshotsTask.Name)
 	}
 
 	if err != nil {
 		panic(err.Error())
 	}
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+func (a *API) checkSnapshots(w http.ResponseWriter, r *http.Request) {
+	return
 }
 
 func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
@@ -182,29 +188,35 @@ func (snap *Snapshot) getBGAva(response *http.Response) {
 		panic(err.Error())
 	}
 	ava := doc.Find(".status").Text()
-	switch ava {
-	case "Currently out of stock":
+	switch {
+	case ava == "Currently out of stock":
 		snap.Avaliabilty = "Out"
 		snap.AvCount = 0
 		log.Print("out")
 		return
-	case "In stock, usually dispatched in 1 business day":
+	case ava == "In stock, usually dispatched in 1 business day":
 		snap.Avaliabilty = "Available"
 		log.Print("available")
 		return
-	}
-	rx, _ := regexp.Compile("[0-9]+")
-	avaCount, _ := strconv.Atoi(rx.FindStringSubmatch(ava)[0])
-	if avaCount <= 5 {
-		snap.Avaliabilty = "Low"
+	case strings.Contains(ava, "usually dispatched in 1 business day"):
+		rx, _ := regexp.Compile("[0-9]+")
+		avaCount, _ := strconv.Atoi(rx.FindStringSubmatch(ava)[0])
+		if avaCount <= 5 {
+			snap.Avaliabilty = "Low"
+			snap.AvCount = avaCount
+			log.Print("low")
+			return
+		}
+		snap.Avaliabilty = "Available"
 		snap.AvCount = avaCount
-		log.Print("low")
+		log.Print("available with number")
+		return
+	default:
+		snap.Avaliabilty = "Could not fetch update"
+		snap.AvCount = 0
+		log.Printf("Could not fetch update: %s", ava)
 		return
 	}
-	snap.Avaliabilty = "Available"
-	snap.AvCount = avaCount
-	log.Print("available with number")
-	return
 }
 
 func (a *API) registerMiddlewares(
