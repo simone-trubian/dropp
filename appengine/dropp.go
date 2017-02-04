@@ -12,6 +12,7 @@ import (
 	gq "github.com/PuerkitoBio/goquery"
 	gae "google.golang.org/appengine"
 	db "google.golang.org/appengine/datastore"
+	mail "google.golang.org/appengine/mail"
 	tq "google.golang.org/appengine/taskqueue"
 	ufe "google.golang.org/appengine/urlfetch"
 	usr "google.golang.org/appengine/user"
@@ -76,8 +77,8 @@ func init() {
 		"/create_snapshots",
 		api.recoverMiddleware(http.HandlerFunc(api.createSnapshots)))
 	http.Handle(
-		"/check_snapshots",
-		api.recoverMiddleware(http.HandlerFunc(api.checkSnapshots)))
+		"/send_report_email",
+		api.recoverMiddleware(http.HandlerFunc(api.sendReportEmail)))
 }
 
 func newAPI() *API {
@@ -133,10 +134,10 @@ func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 	createSnapshotsTask := tq.NewPOSTTask(
 		"/create_snapshots", map[string][]string{})
 
-	checkTaskCompleted := tq.NewPOSTTask(
-		"/check_snapshots", map[string][]string{"task_name": {"default"}})
+	sendReportEmailTask := tq.NewPOSTTask(
+		"/send_report_email", map[string][]string{"task_name": {"default"}})
 
-	allTasks := []*tq.Task{createSnapshotsTask, checkTaskCompleted}
+	allTasks := []*tq.Task{createSnapshotsTask, sendReportEmailTask}
 	_, err := tq.AddMulti(ctx, allTasks, "default")
 
 	if err != nil {
@@ -150,8 +151,19 @@ func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
 }
-func (a *API) checkSnapshots(w http.ResponseWriter, r *http.Request) {
-	return
+func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
+
+	ctx := gae.NewContext(r)
+	mgs := &mail.Message{
+		Sender:  "Dropp <dropp@dropp-platform.appspot.com>",
+		To:      []string{"simone.trubian@gmail.com"},
+		Subject: "Daily Snapshot Report",
+		Body:    "hello!",
+	}
+	err := mail.Send(ctx, mgs)
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
