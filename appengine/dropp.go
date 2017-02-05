@@ -1,6 +1,7 @@
 package dropp
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -49,6 +50,11 @@ type HomeData struct {
 	CurrentUser *usr.User
 	LogoutURL   string
 	Items       *[]Item
+}
+
+// EmailData contains all data needed by the availability report email
+type EmailData struct {
+	Prova string
 }
 
 func (a *API) newHomeData() HomeData {
@@ -151,16 +157,31 @@ func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
 }
+
 func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
+
+	var body bytes.Buffer
+
+	t, err := tmpl.ParseFiles("templates/email.html")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	err = t.Execute(&body, EmailData{Prova: "porcodio"})
+	if err != nil {
+		log.Printf("Error in executing template: %s", err)
+		return
+	}
 
 	ctx := gae.NewContext(r)
 	mgs := &mail.Message{
-		Sender:  "Dropp <dropp@dropp-platform.appspot.com>",
-		To:      []string{"simone.trubian@gmail.com"},
-		Subject: "Daily Snapshot Report",
-		Body:    "hello!",
+		Sender:   "Dropp <dropp@dropp-platform.appspot.com>",
+		To:       []string{"simone.trubian@gmail.com"},
+		Subject:  "Daily Snapshot Report",
+		HTMLBody: body.String(),
 	}
-	err := mail.Send(ctx, mgs)
+
+	err = mail.Send(ctx, mgs)
 	if err != nil {
 		panic(err.Error())
 	}
