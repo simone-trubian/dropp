@@ -141,10 +141,10 @@ func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 		"/create_snapshots", map[string][]string{})
 
 	sendReportEmailTask := tq.NewPOSTTask(
-		"/send_report_email", map[string][]string{"task_name": {"default"}})
+		"/send_report_email", map[string][]string{})
 
 	allTasks := []*tq.Task{createSnapshotsTask, sendReportEmailTask}
-	_, err := tq.AddMulti(ctx, allTasks, "default")
+	_, err := tq.AddMulti(ctx, allTasks, "snapshot")
 
 	if err != nil {
 		log.Printf("Error while trying to add task: %s", err)
@@ -167,7 +167,7 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 
-	err = t.Execute(&body, EmailData{Prova: "porcodio"})
+	err = t.Execute(&body, EmailData{Prova: "prova"})
 	if err != nil {
 		log.Printf("Error in executing template: %s", err)
 		return
