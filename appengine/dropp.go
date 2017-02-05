@@ -2,6 +2,7 @@ package dropp
 
 import (
 	"bytes"
+	//"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -65,9 +66,31 @@ type EmailData struct {
 	Snapshots *[]Snapshot
 }
 
-func (a *API) newEmailData() EmailData {
+func (a *API) newEmailData(r *http.Request) EmailData {
+
+	var (
+		items     []Item
+		snapshots []Snapshot
+	)
+
+	ctx := gae.NewContext(r)
+	_, err := db.NewQuery("Item").GetAll(ctx, &items)
+	for _, item := range items {
+		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
+		_, err =
+			db.
+				NewQuery("Snapshot").
+				Ancestor(itemKey).
+				Limit(2).
+				GetAll(ctx, &snapshots)
+	}
+	if err != nil {
+		panic(err.Error())
+	}
+
 	return EmailData{
 		Timestamp: time.Now().Format("02/01/2006 - 15:04"),
+		Snapshots: &snapshots,
 	}
 }
 
@@ -126,11 +149,7 @@ func (a *API) item(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
-	ctx := gae.NewContext(r)
-	emailData := a.newEmailData()
-	snapshots := make([]Snapshot, 0, 10)
-	_, err := db.NewQuery("Snapshot").GetAll(ctx, &snapshots)
-	emailData.Snapshots = &snapshots
+	emailData := a.newEmailData(r)
 
 	t, err := tmpl.ParseFiles("templates/email.html")
 	if err != nil {
@@ -184,6 +203,7 @@ func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
 
 	var body bytes.Buffer
 
@@ -192,13 +212,12 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 
-	err = t.Execute(&body, a.newEmailData())
+	err = t.Execute(&body, a.newEmailData(r))
 	if err != nil {
 		log.Printf("Error in executing template: %s", err)
 		return
 	}
 
-	ctx := gae.NewContext(r)
 	mgs := &mail.Message{
 		Sender:   "Dropp <dropp@dropp-platform.appspot.com>",
 		To:       []string{"simone.trubian@gmail.com"},

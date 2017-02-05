@@ -6,7 +6,7 @@
     <h3>Availability updated at {{ .Timestamp }}</h3>
     <ul>
       {{range .Snapshots}}
-        <li>{{.Availability}}</li>
+      <li><h4>{{.</h4> {{.Availability}}</li>
       {{end}}
     </ul>
   </body>
