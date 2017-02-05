@@ -38,11 +38,11 @@ type Item struct {
 
 // Snapshot contains a snapshot of the current status of an item.
 type Snapshot struct {
-	Avaliabilty string
-	AvCount     int
-	OnEbay      bool
-	Price       float64
-	CreatedAt   time.Time
+	Availability string
+	AvCount      int
+	OnEbay       bool
+	Price        float64
+	CreatedAt    time.Time
 }
 
 // HomeData contains all data needed by the home page template
@@ -52,15 +52,22 @@ type HomeData struct {
 	Items       *[]Item
 }
 
-// EmailData contains all data needed by the availability report email
-type EmailData struct {
-	Prova string
-}
-
 func (a *API) newHomeData() HomeData {
 	return HomeData{
 		CurrentUser: a.CurrentUser,
 		LogoutURL:   a.LogoutURL,
+	}
+}
+
+// EmailData contains all data needed by the availability report email
+type EmailData struct {
+	Timestamp string
+	Snapshots *[]Snapshot
+}
+
+func (a *API) newEmailData() EmailData {
+	return EmailData{
+		Timestamp: time.Now().Format("02/01/2006 - 15:04"),
 	}
 }
 
@@ -77,6 +84,7 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
+	http.Handle("/snapshot", api.registerMiddlewares(api.snapshot))
 	http.Handle(
 		"/create_snapshots_task", api.registerMiddlewares(api.createSnapshotsTasks))
 	http.Handle(
@@ -115,6 +123,23 @@ func (a *API) item(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+	emailData := a.newEmailData()
+	snapshots := make([]Snapshot, 0, 10)
+	_, err := db.NewQuery("Snapshot").GetAll(ctx, &snapshots)
+	emailData.Snapshots = &snapshots
+
+	t, err := tmpl.ParseFiles("templates/email.html")
+	if err != nil {
+		panic(err.Error())
+	}
+	err = t.Execute(w, emailData)
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +192,7 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 
-	err = t.Execute(&body, EmailData{Prova: "prova"})
+	err = t.Execute(&body, a.newEmailData())
 	if err != nil {
 		log.Printf("Error in executing template: %s", err)
 		return
@@ -223,29 +248,29 @@ func (snap *Snapshot) getBGAva(response *http.Response) {
 	ava := doc.Find(".status").Text()
 	switch {
 	case ava == "Currently out of stock":
-		snap.Avaliabilty = "Out"
+		snap.Availability = "Out"
 		snap.AvCount = 0
 		log.Print("out")
 		return
 	case ava == "In stock, usually dispatched in 1 business day":
-		snap.Avaliabilty = "Available"
+		snap.Availability = "Available"
 		log.Print("available")
 		return
 	case strings.Contains(ava, "usually dispatched in 1 business day"):
 		rx, _ := regexp.Compile("[0-9]+")
 		avaCount, _ := strconv.Atoi(rx.FindStringSubmatch(ava)[0])
 		if avaCount <= 5 {
-			snap.Avaliabilty = "Low"
+			snap.Availability = "Low"
 			snap.AvCount = avaCount
 			log.Print("low")
 			return
 		}
-		snap.Avaliabilty = "Available"
+		snap.Availability = "Available"
 		snap.AvCount = avaCount
 		log.Print("available with number")
 		return
 	default:
-		snap.Avaliabilty = "Could not fetch update"
+		snap.Availability = "Could not fetch update"
 		snap.AvCount = 0
 		log.Printf("Could not fetch update: %s", ava)
 		return
