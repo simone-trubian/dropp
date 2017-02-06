@@ -7,9 +7,21 @@
     <ul>
       {{range .SnapDiffs}}
       <li>
-        <h4>{{.ItemName}}</h4>
+        <h4><a href="{{.ItemURL}}">{{.ItemName}}</a></h4>
         <p><strong>BangGood availability</strong> {{.PreviousAva}} → {{.CurrentAva}}</p>
-        <p><strong>On ebay</strong> {{.PreviousStatus}} → {{.CurrentStatus}}</p>
+        <p><strong>On ebay</strong>
+          {{if .PreviousStatus}}
+          <font size="5" style="color:green">&#9745;</font> <!-- Ballot box with check -->
+          {{else}}
+          <font size="5" style="color:red">&#9746;</font> <!-- Ballot box with cross -->
+          {{end}}
+          →
+          {{if .CurrentStatus}}
+          <font size="5" style="color:green">&#9745;</font> <!-- Ballot box with check -->
+          {{else}}
+          <font size="5" style="color:red">&#9746;</font> <!-- Ballot box with cross -->
+          {{end}}
+        </p>
         <p><strong>Price</strong> {{.PreviousPrice}} → {{.CurrentPrice}}</p>
       </li>
       {{end}}

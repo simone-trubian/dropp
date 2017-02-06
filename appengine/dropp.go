@@ -69,6 +69,7 @@ type EmailData struct {
 // previous snaphot.
 type SnapshotDiff struct {
 	ItemName       string
+	ItemURL        string
 	PreviousAva    string
 	PreviousStatus bool
 	PreviousPrice  float64
@@ -105,12 +106,13 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 		}
 
 		// Check if a new diff is needed
-		if currentSnapshots[0].Availability != currentSnapshots[1].Availability &&
-			currentSnapshots[0].OnEbay != currentSnapshots[1].OnEbay &&
-			currentSnapshots[0].Price != currentSnapshots[1].Price {
+		if currentSnapshots[0].Availability == currentSnapshots[1].Availability &&
+			currentSnapshots[0].OnEbay == currentSnapshots[1].OnEbay &&
+			currentSnapshots[0].Price == currentSnapshots[1].Price {
 
 			newDiff = SnapshotDiff{
 				ItemName:       item.ItemName,
+				ItemURL:        item.SourceURL,
 				PreviousAva:    currentSnapshots[0].Availability,
 				CurrentAva:     currentSnapshots[1].Availability,
 				PreviousStatus: currentSnapshots[0].OnEbay,
