@@ -3,10 +3,15 @@
   <head>
   </head>
   <body>
-    <h3>Availability updated at {{ .Timestamp }}</h3>
+    <h3>Availability updated at {{ .LastUpdate }}</h3>
     <ul>
-      {{range .Snapshots}}
-      <li><h4>{{.</h4> {{.Availability}}</li>
+      {{range .SnapDiffs}}
+      <li>
+        <h4>{{.ItemName}}</h4>
+        <p><strong>BangGood availability</strong> {{.PreviousAva}} → {{.CurrentAva}}</p>
+        <p><strong>On ebay</strong> {{.PreviousStatus}} → {{.CurrentStatus}}</p>
+        <p><strong>Price</strong> {{.PreviousPrice}} → {{.CurrentPrice}}</p>
+      </li>
       {{end}}
     </ul>
   </body>

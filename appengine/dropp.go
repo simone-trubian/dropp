@@ -2,7 +2,6 @@ package dropp
 
 import (
 	"bytes"
-	//"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -62,35 +61,75 @@ func (a *API) newHomeData() HomeData {
 
 // EmailData contains all data needed by the availability report email
 type EmailData struct {
-	Timestamp string
-	Snapshots *[]Snapshot
+	LastUpdate string
+	SnapDiffs  []SnapshotDiff
+}
+
+// SnapshotDiff Is created if there is a difference between the current and the
+// previous snaphot.
+type SnapshotDiff struct {
+	ItemName       string
+	PreviousAva    string
+	PreviousStatus bool
+	PreviousPrice  float64
+	CurrentAva     string
+	CurrentStatus  bool
+	CurrentPrice   float64
 }
 
 func (a *API) newEmailData(r *http.Request) EmailData {
 
 	var (
-		items     []Item
-		snapshots []Snapshot
+		items            []Item
+		snapshotDiffs    []SnapshotDiff
+		currentSnapshots []Snapshot
+		newDiff          SnapshotDiff
 	)
 
 	ctx := gae.NewContext(r)
+
 	_, err := db.NewQuery("Item").GetAll(ctx, &items)
 	for _, item := range items {
+
+		// Get last two snaphots
 		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
 		_, err =
 			db.
 				NewQuery("Snapshot").
 				Ancestor(itemKey).
+				Order("-CreatedAt").
 				Limit(2).
-				GetAll(ctx, &snapshots)
+				GetAll(ctx, &currentSnapshots)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		// Check if a new diff is needed
+		if currentSnapshots[0].Availability != currentSnapshots[1].Availability &&
+			currentSnapshots[0].OnEbay != currentSnapshots[1].OnEbay &&
+			currentSnapshots[0].Price != currentSnapshots[1].Price {
+
+			newDiff = SnapshotDiff{
+				ItemName:       item.ItemName,
+				PreviousAva:    currentSnapshots[0].Availability,
+				CurrentAva:     currentSnapshots[1].Availability,
+				PreviousStatus: currentSnapshots[0].OnEbay,
+				CurrentStatus:  currentSnapshots[1].OnEbay,
+				PreviousPrice:  currentSnapshots[0].Price,
+				CurrentPrice:   currentSnapshots[1].Price,
+			}
+
+			snapshotDiffs = append(snapshotDiffs, newDiff)
+
+		}
 	}
 	if err != nil {
 		panic(err.Error())
 	}
 
 	return EmailData{
-		Timestamp: time.Now().Format("02/01/2006 - 15:04"),
-		Snapshots: &snapshots,
+		LastUpdate: currentSnapshots[0].CreatedAt.Format("02/01/2006 - 15:04"),
+		SnapDiffs:  snapshotDiffs,
 	}
 }
 
@@ -107,7 +146,7 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
-	http.Handle("/snapshot", api.registerMiddlewares(api.snapshot))
+	http.Handle("/snapshot", http.HandlerFunc(api.snapshot)) // FIXME registerMiddlewares
 	http.Handle(
 		"/create_snapshots_task", api.registerMiddlewares(api.createSnapshotsTasks))
 	http.Handle(
@@ -164,7 +203,7 @@ func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
 	homeData := a.newHomeData()
-	items := make([]Item, 0, 10)
+	items := make([]Item, 0, 10) // FIXME try using an array instead of a slice
 	_, err := db.NewQuery("Item").GetAll(ctx, &items)
 	homeData.Items = &items
 
