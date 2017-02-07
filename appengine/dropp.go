@@ -104,6 +104,11 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 			panic(err.Error())
 		}
 
+		// If item does not have 2 snaphots (it was just added) skip it
+		if len(currentSnapshots) < 2 {
+			continue
+		}
+
 		// Check if a new diff is needed
 		//
 		// ATTENTION!!!!!
@@ -133,7 +138,7 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 	}
 
 	return EmailData{
-		LastUpdate: currentSnapshots[0].CreatedAt.Format("02/01/2006 - 15:04"),
+		LastUpdate: time.Now().Format("02/01/2006 - 15:04"),
 		SnapDiffs:  snapshotDiffs,
 	}
 }
@@ -341,7 +346,7 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 		client := ufe.Client(ctx)
 		resp, err := client.Get(item.SourceURL)
 		if err != nil {
-			panic(err.Error())
+			continue
 		}
 
 		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
@@ -365,7 +370,6 @@ func (snap *Snapshot) getBGAva(response *http.Response) {
 	}
 	ava := doc.Find(".status").Text()
 	snap.Availability = NewAva(ava)
-	log.Print(ava)
 	return
 }
 
