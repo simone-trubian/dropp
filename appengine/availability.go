@@ -1,7 +1,6 @@
 package dropp
 
 import (
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -47,7 +46,6 @@ func NewAva(avaString string) AvaComp {
 	switch {
 	// This usually happens when the URL is wrong or the item was removed
 	case avaString == "":
-		log.Print("no ava!")
 		return AvaComp{
 			Availability: Unknown,
 			ItemCount:    0,
