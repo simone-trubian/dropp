@@ -88,6 +88,7 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 	_, err := db.NewQuery("Item").GetAll(ctx, &items)
 	for _, item := range items {
 
+		currentSnapshots = []Snapshot{}
 		// Get last two snaphots
 		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
 		_, err =
@@ -102,19 +103,23 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 		}
 
 		// Check if a new diff is needed
-		if currentSnapshots[0].Availability == currentSnapshots[1].Availability &&
-			currentSnapshots[0].OnEbay == currentSnapshots[1].OnEbay &&
-			currentSnapshots[0].Price == currentSnapshots[1].Price {
+		//
+		// ATTENTION!!!!!
+		// As the qurey is ordered in descending order the first element of the
+		// list is the MOST RECENT!!!!
+		if currentSnapshots[0].Availability != currentSnapshots[1].Availability ||
+			currentSnapshots[0].OnEbay != currentSnapshots[1].OnEbay ||
+			currentSnapshots[0].Price != currentSnapshots[1].Price {
 
 			newDiff = SnapshotDiff{
 				ItemName:       item.ItemName,
 				ItemURL:        item.SourceURL,
-				PreviousAva:    currentSnapshots[0].Availability,
-				CurrentAva:     currentSnapshots[1].Availability,
-				PreviousStatus: currentSnapshots[0].OnEbay,
-				CurrentStatus:  currentSnapshots[1].OnEbay,
-				PreviousPrice:  currentSnapshots[0].Price,
-				CurrentPrice:   currentSnapshots[1].Price,
+				PreviousAva:    currentSnapshots[1].Availability,
+				CurrentAva:     currentSnapshots[0].Availability,
+				PreviousStatus: currentSnapshots[1].OnEbay,
+				CurrentStatus:  currentSnapshots[0].OnEbay,
+				PreviousPrice:  currentSnapshots[1].Price,
+				CurrentPrice:   currentSnapshots[0].Price,
 			}
 
 			snapshotDiffs = append(snapshotDiffs, newDiff)
@@ -303,6 +308,7 @@ func (snap *Snapshot) getBGAva(response *http.Response) {
 	}
 	ava := doc.Find(".status").Text()
 	snap.Availability = NewAva(ava)
+	log.Print(ava)
 	return
 }
 

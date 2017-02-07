@@ -39,8 +39,12 @@ func init() {
 // NewAva returns a new compounded availability structure starting from a
 // line scraped from the website page
 func NewAva(avaString string) AvaComp {
+	outPredicate :=
+		avaString == "Currently out of stock" ||
+			strings.Contains(avaString, "Expected restock")
+
 	switch {
-	case avaString == "Currently out of stock":
+	case outPredicate:
 		return AvaComp{
 			Availability: Out,
 			ItemCount:    0,
