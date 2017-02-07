@@ -2,9 +2,11 @@ package dropp
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	gq "github.com/PuerkitoBio/goquery"
@@ -149,6 +151,7 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
+	http.Handle("/upload_csv", api.registerMiddlewares(api.uploadCSV))
 	http.Handle("/snapshot", http.HandlerFunc(api.snapshot)) // FIXME registerMiddlewares
 	http.Handle(
 		"/create_snapshots_task", api.registerMiddlewares(api.createSnapshotsTasks))
@@ -221,6 +224,57 @@ func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func (a *API) uploadCSV(w http.ResponseWriter, r *http.Request) {
+	var (
+		item    Item
+		itemKey *db.Key
+		items   []Item
+		keys    []*db.Key
+	)
+	ctx := gae.NewContext(r)
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	file, _, err := r.FormFile("uploadfile")
+	defer file.Close()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	csvFileContent, err := csv.NewReader(file).ReadAll()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for _, row := range csvFileContent {
+
+		// Create Item and append it to the array
+		item = Item{
+			ItemName:  row[0],
+			SourceURL: row[1],
+			EbayID:    row[2],
+		}
+		if isActive, err := strconv.ParseBool(row[3]); err == nil {
+			item.IsActive = isActive
+		} else {
+			item.IsActive = false
+		}
+		items = append(items, item)
+
+		// Create item key
+		itemKey = db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
+		keys = append(keys, itemKey)
+	}
+
+	_, err = db.PutMulti(ctx, keys, items)
+	if err != nil {
+		panic(err.Error())
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (a *API) createSnapshotsTasks(w http.ResponseWriter, r *http.Request) {
