@@ -36,7 +36,9 @@ func init() {
 	threshold = 10
 }
 
-func newAva(avaString string) AvaComp {
+// NewAva returns a new compounded availability structure starting from a
+// line scraped from the website page
+func NewAva(avaString string) AvaComp {
 	switch {
 	case avaString == "Currently out of stock":
 		return AvaComp{
@@ -70,7 +72,7 @@ func newAva(avaString string) AvaComp {
 }
 
 // Print returns a well formatted string for any availability case
-func (av AvaComp) Print() string {
+func (av AvaComp) String() string {
 	switch av.Availability {
 	case Available:
 		if av.ItemCount == 0 {

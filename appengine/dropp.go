@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	gq "github.com/PuerkitoBio/goquery"
@@ -38,8 +35,7 @@ type Item struct {
 
 // Snapshot contains a snapshot of the current status of an item.
 type Snapshot struct {
-	Availability string
-	AvCount      int
+	Availability AvaComp
 	OnEbay       bool
 	Price        float64
 	CreatedAt    time.Time
@@ -70,10 +66,10 @@ type EmailData struct {
 type SnapshotDiff struct {
 	ItemName       string
 	ItemURL        string
-	PreviousAva    string
+	PreviousAva    AvaComp
 	PreviousStatus bool
 	PreviousPrice  float64
-	CurrentAva     string
+	CurrentAva     AvaComp
 	CurrentStatus  bool
 	CurrentPrice   float64
 }
@@ -306,35 +302,8 @@ func (snap *Snapshot) getBGAva(response *http.Response) {
 		panic(err.Error())
 	}
 	ava := doc.Find(".status").Text()
-	switch {
-	case ava == "Currently out of stock":
-		snap.Availability = "Out"
-		snap.AvCount = 0
-		log.Print("out")
-		return
-	case ava == "In stock, usually dispatched in 1 business day":
-		snap.Availability = "Available"
-		log.Print("available")
-		return
-	case strings.Contains(ava, "usually dispatched in 1 business day"):
-		rx, _ := regexp.Compile("[0-9]+")
-		avaCount, _ := strconv.Atoi(rx.FindStringSubmatch(ava)[0])
-		if avaCount <= 5 {
-			snap.Availability = "Low"
-			snap.AvCount = avaCount
-			log.Print("low")
-			return
-		}
-		snap.Availability = "Available"
-		snap.AvCount = avaCount
-		log.Print("available with number")
-		return
-	default:
-		snap.Availability = "Could not fetch update"
-		snap.AvCount = 0
-		log.Printf("Could not fetch update: %s", ava)
-		return
-	}
+	snap.Availability = NewAva(ava)
+	return
 }
 
 func (a *API) registerMiddlewares(
