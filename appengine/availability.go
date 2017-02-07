@@ -75,7 +75,7 @@ func NewAva(avaString string) AvaComp {
 	}
 }
 
-// Print returns a well formatted string for any availability case
+// String returns a well formatted string for any availability case
 func (av AvaComp) String() string {
 	switch av.Availability {
 	case Available:
@@ -90,5 +90,19 @@ func (av AvaComp) String() string {
 		return "Out of stock"
 	default:
 		return "Could not update availability"
+	}
+}
+
+// AvaColor returns the HTML color with witch to display the availility
+func AvaColor(av AvaComp) string {
+	switch av.Availability {
+	case Available:
+		return "color:green"
+	case Low:
+		return "color:orage"
+	case Out:
+		return "color:red"
+	default:
+		return "color:blue"
 	}
 }

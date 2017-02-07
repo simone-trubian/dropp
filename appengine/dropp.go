@@ -193,7 +193,10 @@ func (a *API) item(w http.ResponseWriter, r *http.Request) {
 func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
 	emailData := a.newEmailData(r)
 
-	t, err := tmpl.ParseFiles("templates/email.html")
+	t, err := tmpl.
+		New("email.html").
+		Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
+		ParseFiles("templates/email.html")
 	if err != nil {
 		panic(err.Error())
 	}

@@ -8,7 +8,10 @@
       {{range .SnapDiffs}}
       <li>
         <h4><a href="{{.ItemURL}}">{{.ItemName}}</a></h4>
-        <p><strong>BangGood availability</strong> {{.PreviousAva}} → {{.CurrentAva}}</p>
+        <p><strong>Availability</strong>
+          <font style="{{avaCol .PreviousAva}}">{{.PreviousAva}}</font>
+          →
+          <font style="{{avaCol .CurrentAva}}">{{.CurrentAva}}</font></p>
         <p><strong>On ebay</strong>
           {{if .PreviousStatus}}
           <font size="5" style="color:green">&#9745;</font> <!-- Ballot box with check -->
