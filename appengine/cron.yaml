@@ -1,0 +1,4 @@
+cron:
+- description: dayily availability snapshot
+  url: /create_snapshots_tasks
+  schedule: every day 10:00
