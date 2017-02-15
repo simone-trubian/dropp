@@ -105,7 +105,7 @@ func AvaColor(av AvaComp) string {
 	case Available:
 		return "color:green"
 	case Low:
-		return "color:orage"
+		return "color:orange"
 	case Out:
 		return "color:red"
 	default:
