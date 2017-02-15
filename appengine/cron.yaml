@@ -1,4 +1,4 @@
 cron:
-- description: dayily availability snapshot
-  url: /create_snapshots_tasks
+- description: daily availability snapshot
+  url: /create_snapshots_task
   schedule: every day 10:00
