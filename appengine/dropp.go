@@ -343,7 +343,11 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 	// Fetch the page
 	ctx := gae.NewContext(r)
 	items := make([]Item, 0, 10)
-	_, err := db.NewQuery("Item").GetAll(ctx, &items)
+	_, err := db.
+		NewQuery("Item").
+		Filter("isActive", true).
+		GetAll(ctx, &items)
+
 	for _, item := range items {
 		log.Printf("Updating snapshot for item %s", item.SourceURL)
 		client := ufe.Client(ctx)
