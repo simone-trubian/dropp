@@ -1,19 +1,16 @@
 from flask import Flask
-from flask.views import MethodView
+from flask_restful import Resource, Api
 
 
-class Item(MethodView):
+class Item(Resource):
     def get(self):
-        return 'Hello World!'
+        return {'Hello': 'World'}
 
 
 app = Flask(__name__)
+api = Api(app)
 
-
-app.add_url_rule(
-    '/', view_func=Item.as_view('item')
-)
-
+api.add_resource(Item, '/')
 
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -156,6 +157,7 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
+	http.Handle("/ebay", http.HandlerFunc(api.ebay))
 	http.Handle("/upload_csv", api.registerMiddlewares(api.uploadCSV))
 	http.Handle("/snapshot", http.HandlerFunc(api.snapshot)) // FIXME registerMiddlewares
 	http.Handle(
@@ -171,6 +173,22 @@ func init() {
 
 func newAPI() *API {
 	return &API{}
+}
+
+func (a *API) ebay(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+	client := ufe.Client(ctx)
+	resp, err := client.Get("http://127.0.0.1:9090/") // FIXME
+	if err != nil {
+		log.Printf("Error while trying to contact the Ebay service :%s", err)
+		panic(err.Error()) // FIXME
+	}
+	defer resp.Body.Close()
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		log.Printf("Error while trying to copy the :%s", err) // FIXME
+		panic(err.Error())                                    // FIXME
+	}
 }
 
 func (a *API) item(w http.ResponseWriter, r *http.Request) {
