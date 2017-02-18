@@ -327,7 +327,7 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mgs := &mail.Message{
-		Sender:   "Dropp <dropp@dropp-platform.appspotmail.com>",
+		Sender:   "Dropp <dropp@dropp-prod.appspotmail.com>",
 		To:       []string{"simone.trubian@gmail.com", "stoxx84@gmail.com"},
 		Subject:  "Daily Snapshot Report",
 		HTMLBody: body.String(),
