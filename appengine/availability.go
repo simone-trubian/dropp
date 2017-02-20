@@ -39,9 +39,12 @@ func init() {
 // NewAva returns a new compounded availability structure starting from a
 // line scraped from the website page
 func NewAva(avaString string) AvaComp {
-	outPredicate :=
-		avaString == "Currently out of stock" ||
-			strings.Contains(avaString, "Expected restock")
+	outPredicate := avaString == "Currently out of stock" ||
+		avaString == "Usually dispatched in 6-9 business days" ||
+		strings.Contains(avaString, "Expected restock on")
+
+	avaPredicate := avaString == "In stock, usually dispatched in 1 business day" ||
+		avaString == "In stock, usually dispatched in 1-3 business days"
 
 	switch {
 	// This usually happens when the URL is wrong or the item was removed
@@ -55,7 +58,7 @@ func NewAva(avaString string) AvaComp {
 			Availability: Out,
 			ItemCount:    0,
 		}
-	case avaString == "In stock, usually dispatched in 1 business day":
+	case avaPredicate:
 		return AvaComp{
 			Availability: Available,
 			ItemCount:    0,
