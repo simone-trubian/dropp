@@ -3,6 +3,7 @@ package dropp
 import (
 	"bytes"
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,6 +17,10 @@ import (
 	ufe "google.golang.org/appengine/urlfetch"
 	usr "google.golang.org/appengine/user"
 	tmpl "html/template"
+)
+
+var (
+	env = flag.String("env", "production", "Env in which the app runs")
 )
 
 // API contains all data needed for the API
@@ -126,6 +131,7 @@ var allowedUsers map[string]bool
 var api *API
 
 func init() {
+	flag.Parse()
 	allowedUsers = map[string]bool{
 		"simone.trubian@gmail.com": true,
 		"stoxx84@gmail.com":        true,
@@ -418,9 +424,3 @@ func (a *API) authMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-/*
-	Auth'n'Auth token Token for: import007 Expires: Thu, 09 Aug 2018 21:22:41 GMT
-
-	AgAAAA**AQAAAA**aAAAAA**ocakWA**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6ABl4CoCpaBoAudj6x9nY+seQ**4psDAA**AAMAAA**9FXhu4fcHMlyizbBrdGsNW9gzm6ZdlUsUoMMp3J8iZ48RfjlWmcdSvZQfJCI7Redg5arrTahJZnBfoAAkJRqCXeoq4rP+0KUv+sd11xRmmUjWKkhzvHF4I9x2SGTnm58Px67+qTEUkA77BOGexdLiO0AE/2WdQYDrPu4vFfqxffNsEF1HF/LBGAb8qC9eAn0yfcsXReR7P5dHMX7rgjMq9QLJWrwDrtyQzc60KED/KCC3LygTpEvVC+Ki0vBXEa1E3fBzIq4sLyj2MTN89YwBo9ttlrbLJcQyJSwElwPWn1mffQTvzAoXXafGZeWHeyjVLTjcdWaCqjl8HyxFSNyG2JvMYIEqkwjeFtF8ZRNVIDy9/tiY1Mu4nEkq2bOQSGXawOMLRPoQVM98q/OpoSFXpSsNYn+syNKJINdoxCuhsODCleo4jIcOb3R37roMi4JR6QXSN5dtDNMJM7uzlFTKhV/nwZXD2Bfeih9nLRndDJ6xawiuWgI5Ok1SwW+2SWNPvi6EbY/OIWdUbGgvVT9h7xYkWWFoE2+e+5KeKxyWrVdeK6S1aGmwEYlxD8B8NA0mijWFFkSLyiXDP/0cowjKVSdu1GqYuirGMDN4zabtJyGNkOfyR9/u4jwCcd5NhLQ+57pI4jSeagFSFb7+M3Blohk9FvhIMCc1szwcWq7VpUEvnFAPrZ7UpbrBFBawi2HLVK221exmxZ38YgP1AWvY6+nWjkPCaU15Y+qFcXQ3YTeZUYPLHVctWFHq8BuUded
-*/
