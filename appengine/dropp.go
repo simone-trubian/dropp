@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	gq "github.com/PuerkitoBio/goquery"
 	gae "google.golang.org/appengine"
 	db "google.golang.org/appengine/datastore"
 	mail "google.golang.org/appengine/mail"
@@ -36,14 +35,6 @@ type Item struct {
 	IsActive  bool
 }
 
-// Snapshot contains a snapshot of the current status of an item.
-type Snapshot struct {
-	Availability AvaComp
-	OnEbay       bool
-	Price        float64
-	CreatedAt    time.Time
-}
-
 // HomeData contains all data needed by the home page template
 type HomeData struct {
 	CurrentUser *usr.User
@@ -62,19 +53,6 @@ func (a *API) newHomeData() HomeData {
 type EmailData struct {
 	LastUpdate string
 	SnapDiffs  []SnapshotDiff
-}
-
-// SnapshotDiff Is created if there is a difference between the current and the
-// previous snaphot.
-type SnapshotDiff struct {
-	ItemName       string
-	ItemURL        string
-	PreviousAva    AvaComp
-	PreviousStatus bool
-	PreviousPrice  float64
-	CurrentAva     AvaComp
-	CurrentStatus  bool
-	CurrentPrice   float64
 }
 
 func (a *API) newEmailData(r *http.Request) EmailData {
@@ -386,17 +364,6 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
-}
-
-func (snap *Snapshot) getBGAva(response *http.Response) {
-	// Scrape the page and get availability
-	doc, err := gq.NewDocumentFromResponse(response)
-	if err != nil {
-		panic(err.Error())
-	}
-	ava := doc.Find(".status").Text()
-	snap.Availability = NewAva(ava)
-	return
 }
 
 func (a *API) registerMiddlewares(
