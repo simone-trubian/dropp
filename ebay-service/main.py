@@ -37,13 +37,11 @@ class Item(Resource):
         else:
             return obj.get('Quantity')
 
-    def get(self):
-        ident = "302212368877"
+    def get(self, item_id):
 
         try:
-            item_response = ebayApi.execute('GetItem', {'ItemID': ident})
+            item_response = ebayApi.execute('GetItem', {'ItemID': item_id})
         except ConnectionError as e:
-            # logger.error(e) FIXME
             return dump({'error': repr(e)})
         item_response_dict = item_response.dict()
 
@@ -59,7 +57,6 @@ class Item(Resource):
         }
 
         return dropp_item
-        # logger.debug('Replying object for Ebay item ID:' + str(ident)) FIXME
 
 
 domain = 'api.ebay.com'
@@ -71,7 +68,7 @@ ebayApi = Trading(
 
 app = Flask(__name__)
 api = Api(app)
-api.add_resource(Item, '/')
+api.add_resource(Item, '/item/<string:item_id>')
 
 
 if __name__ == '__main__':
