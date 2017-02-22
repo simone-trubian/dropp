@@ -7,6 +7,7 @@ from ebaysdk.trading import Connection as Trading
 
 class Item(Resource):
 
+    @staticmethod
     def _get_status(obj):
         """ Return if the item is indexed.
 
@@ -19,6 +20,7 @@ class Item(Resource):
         else:
             return 'Active'
 
+    @staticmethod
     def _get_quantity(obj):
         """ Return the stock quantity of the item.
 
@@ -36,14 +38,15 @@ class Item(Resource):
             return obj.get('Quantity')
 
     def get(self):
-        ident = "FIXME"
+        ident = "302212368877"
 
         try:
-            item_response = api.execute('GetItem', {'ItemID': ident})
+            item_response = ebayApi.execute('GetItem', {'ItemID': ident})
         except ConnectionError as e:
             # logger.error(e) FIXME
             return dump({'error': repr(e)})
         item_response_dict = item_response.dict()
+
         ebay_item = item_response_dict['Item']
         dropp_item = {
             'name': ebay_item['Title'],
@@ -55,13 +58,12 @@ class Item(Resource):
             'status': self._get_status(ebay_item)
         }
 
-        return dump(dropp_item)
+        return dropp_item
         # logger.debug('Replying object for Ebay item ID:' + str(ident)) FIXME
 
 
-settings = {}  # FIXME
-domain = settings['domain']
-ebay_config_file = settings['ebay_config_file']
+domain = 'api.ebay.com'
+ebay_config_file = './ebay.yaml'
 ebayApi = Trading(
     domain=domain,
     config_file=ebay_config_file
