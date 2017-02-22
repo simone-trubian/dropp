@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -135,7 +134,6 @@ func init() {
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
 	http.Handle("/item", api.registerMiddlewares(api.item))
-	http.Handle("/ebay", http.HandlerFunc(api.ebay))
 	http.Handle("/upload_csv", api.registerMiddlewares(api.uploadCSV))
 	http.Handle("/snapshot", http.HandlerFunc(api.snapshot)) // FIXME registerMiddlewares
 	http.Handle(
@@ -143,7 +141,7 @@ func init() {
 		api.recoverMiddleware(http.HandlerFunc(api.createSnapshotsTasks)))
 	http.Handle(
 		"/create_snapshots",
-		api.recoverMiddleware(http.HandlerFunc(api.createSnapshots)))
+		http.HandlerFunc(api.createSnapshots))
 	http.Handle(
 		"/send_report_email",
 		api.recoverMiddleware(http.HandlerFunc(api.sendReportEmail)))
@@ -151,22 +149,6 @@ func init() {
 
 func newAPI() *API {
 	return &API{}
-}
-
-func (a *API) ebay(w http.ResponseWriter, r *http.Request) {
-	ctx := gae.NewContext(r)
-	client := ufe.Client(ctx)
-	resp, err := client.Get("http://127.0.0.1:9090/") // FIXME
-	if err != nil {
-		log.Printf("Error while trying to contact the Ebay service :%s", err)
-		panic(err.Error()) // FIXME
-	}
-	defer resp.Body.Close()
-	_, err = io.Copy(w, resp.Body)
-	if err != nil {
-		log.Printf("Error while trying to copy the :%s", err) // FIXME
-		panic(err.Error())                                    // FIXME
-	}
 }
 
 func (a *API) item(w http.ResponseWriter, r *http.Request) {
@@ -342,14 +324,22 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 	items := make([]Item, 0, 10)
 	_, err := db.
 		NewQuery("Item").
-		Filter("isActive", true).
+		Filter("IsActive =", true).
 		GetAll(ctx, &items)
 
 	for _, item := range items {
 		log.Printf("Updating snapshot for item %s", item.SourceURL)
 		client := ufe.Client(ctx)
-		resp, err := client.Get(item.SourceURL)
+		sourceResp, err := client.Get(item.SourceURL)
+		defer sourceResp.Body.Close()
 		if err != nil {
+			log.Printf("Error while fetching item source %s", err)
+			continue
+		}
+		ebayResp, err := client.Get("http://127.0.0.1:9090/item/" + item.EbayID)
+		defer ebayResp.Body.Close()
+		if err != nil {
+			log.Printf("Error while fetching Ebay item status %s", err)
 			continue
 		}
 
@@ -357,7 +347,8 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 		snap := &Snapshot{}
 		snap.OnEbay = false
 		snap.CreatedAt = time.Now()
-		snap.getBGAva(resp)
+		snap.getBGAva(sourceResp)
+		snap.getEbayStatus(ebayResp)
 		snapKey := db.NewIncompleteKey(ctx, "Snapshot", itemKey)
 		_, err = db.Put(ctx, snapKey, snap)
 	}
