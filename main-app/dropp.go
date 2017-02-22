@@ -342,7 +342,7 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error while fetching item source %s", err)
 			continue
 		}
-		ebayResp, err := client.Get("http://127.0.0.1:9090/item/" + item.EbayID)
+		ebayResp, err := client.Get("https://ebay-dot-dropp-prod.appspot.com/item/" + item.EbayID)
 		defer ebayResp.Body.Close()
 		if err != nil {
 			log.Printf("Error while fetching Ebay item status %s", err)
