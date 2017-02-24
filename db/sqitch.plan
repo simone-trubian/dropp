@@ -1,7 +1,0 @@
-%syntax-version=1.0.0
-%project=dropp-db
-
-appschema 2016-04-27T10:27:51Z Simone Trubian <simone.trubian@ondait.com> # Add schema for all Dropp tables.
-items [appschema] 2016-04-27T16:42:10Z Simone Trubian <simone.trubian@ondait.com> # Create a table to track the items.
-roles [appschema] 2016-05-02T19:12:04Z Simone Trubian <simone.trubian@ondait.com> # Create roles for DB access.
-snapshot [items roles] 2016-08-14T09:19:45Z Simone Trubian <simone.trubian@ondait.com> # Creates and status snapshot data types and table.
