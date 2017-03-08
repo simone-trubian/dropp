@@ -325,6 +325,9 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
+	//ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/"  // Production
+	ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
+
 	// Fetch the page
 	ctx := gae.NewContext(r)
 	items := make([]Item, 0, 10)
@@ -342,7 +345,7 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error while fetching item source %s", err)
 			continue
 		}
-		ebayResp, err := client.Get("https://ebay-dot-dropp-prod.appspot.com/item/" + item.EbayID)
+		ebayResp, err := client.Get(ebayServURL + item.EbayID)
 		defer ebayResp.Body.Close()
 		if err != nil {
 			log.Printf("Error while fetching Ebay item status %s", err)
