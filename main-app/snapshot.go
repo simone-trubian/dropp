@@ -11,7 +11,7 @@ import (
 
 // Snapshot contains a snapshot of the current status of an item.
 type Snapshot struct {
-	Availability AvaComp
+	Availability string
 	OnEbay       bool
 	Price        float64
 	CreatedAt    time.Time
@@ -22,10 +22,10 @@ type Snapshot struct {
 type SnapshotDiff struct {
 	ItemName       string
 	ItemURL        string
-	PreviousAva    AvaComp
+	PreviousAva    string
 	PreviousStatus bool
 	PreviousPrice  float64
-	CurrentAva     AvaComp
+	CurrentAva     string
 	CurrentStatus  bool
 	CurrentPrice   float64
 }
@@ -55,7 +55,7 @@ func (snap *Snapshot) getBGAva(response *http.Response) {
 		panic(err.Error())
 	}
 	ava := doc.Find(".status").Text()
-	snap.Availability = NewAva(ava)
+	snap.Availability = ava
 	return
 }
 
