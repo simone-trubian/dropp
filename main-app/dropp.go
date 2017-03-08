@@ -325,8 +325,8 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
-	//ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/"  // Production
-	ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
+	ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/" // Production
+	//ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
 
 	// Fetch the page
 	ctx := gae.NewContext(r)
@@ -340,16 +340,33 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Updating snapshot for item %s", item.SourceURL)
 		client := ufe.Client(ctx)
 		sourceResp, err := client.Get(item.SourceURL)
-		defer sourceResp.Body.Close()
+
 		if err != nil {
 			log.Printf("Error while fetching item source %s", err)
 			continue
+		} else {
+
+			defer func() {
+				err := sourceResp.Body.Close()
+				if err != nil {
+					log.Printf("Error while closing BG page %s", err)
+				}
+			}()
+
 		}
+
 		ebayResp, err := client.Get(ebayServURL + item.EbayID)
-		defer ebayResp.Body.Close()
 		if err != nil {
 			log.Printf("Error while fetching Ebay item status %s", err)
 			continue
+		} else {
+
+			defer func() {
+				err := ebayResp.Body.Close()
+				if err != nil {
+					log.Printf("Error while closing BG page %s", err)
+				}
+			}()
 		}
 
 		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
