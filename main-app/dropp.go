@@ -188,7 +188,7 @@ func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
 
 	t, err := tmpl.
 		New("email.html").
-		Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
+		//Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
 		ParseFiles("templates/email.html")
 	if err != nil {
 		panic(err.Error())
@@ -298,7 +298,7 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 	t, err := tmpl.
 		New("email.html").
-		Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
+		//Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
 		ParseFiles("templates/email.html")
 	if err != nil {
 		panic(err.Error())
