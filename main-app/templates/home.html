@@ -49,6 +49,14 @@
 				$('#items').DataTable();
 			} );
 		</script>
+
+    <style>
+      .short-desc {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 20ch;
+      }
+    </style>
     <title>Welcome to Dropp</title>
   </head>
   <body>
@@ -81,17 +89,21 @@
       <table id="items">
         <thead>
           <tr role="row">
-            <th>Source URL</th>
-            <th>Ebay ID</th>
             <th>Item name</th>
+            <th>Ebay ID</th>
+            <th>Active</th>
+            <th>Source URL</th>
+            <th>Data URL</th>
           </tr>
         </thead>
         <tbody>
           {{range .Items}}
             <tr role="row">
-              <td>{{.SourceURL}}</td>
-              <td>{{.EbayID}}</td>
-              <td>{{.ItemName}}</td>
+              <td nowrap class="short-desc">{{.ItemName}}</td>
+              <td nowrap class="short-desc">{{.EbayID}}</td>
+              <td nowrap class="short-desc">{{.IsActive}}</td>
+              <td nowrap class="short-desc">{{.SourceURL}}</td>
+              <td nowrap class="short-desc">{{.DataURL}}</td>
             </tr>
           {{end}}
         </tbody>
