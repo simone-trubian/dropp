@@ -32,6 +32,7 @@ type API struct {
 // Item models items sold by Dropp
 type Item struct {
 	SourceURL string
+	DataURL   string
 	EbayID    string
 	ItemName  string
 	CreatedAt time.Time
@@ -230,10 +231,16 @@ func (a *API) uploadCSV(w http.ResponseWriter, r *http.Request) {
 	}
 
 	file, _, err := r.FormFile("uploadfile")
-	defer file.Close()
 	if err != nil {
 		panic(err.Error())
 	}
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Printf("Error while trying to close CSV file: %s", err)
+			panic(err.Error())
+		}
+	}()
 
 	csvFileContent, err := csv.NewReader(file).ReadAll()
 	if err != nil {
@@ -242,16 +249,19 @@ func (a *API) uploadCSV(w http.ResponseWriter, r *http.Request) {
 
 	for _, row := range csvFileContent {
 
+		isActive, err := strconv.ParseBool(row[3])
+		if err != nil {
+			log.Printf("Error while trying to load row %s, error: %s", row[0], err)
+			panic(err.Error())
+		}
+
 		// Create Item and append it to the array
 		item = Item{
 			ItemName:  row[0],
 			SourceURL: row[1],
 			EbayID:    row[2],
-		}
-		if isActive, err := strconv.ParseBool(row[3]); err == nil {
-			item.IsActive = isActive
-		} else {
-			item.IsActive = false
+			IsActive:  isActive,
+			DataURL:   row[4],
 		}
 		items = append(items, item)
 
