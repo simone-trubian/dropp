@@ -163,6 +163,7 @@ func (a *API) item(w http.ResponseWriter, r *http.Request) {
 
 	item := &Item{
 		SourceURL: r.FormValue("item-url-input"),
+		DataURL:   r.FormValue("item-data-input"),
 		EbayID:    r.FormValue("item-ebay-id-input"),
 		ItemName:  r.FormValue("item-name-input"),
 		CreatedAt: time.Now(),
