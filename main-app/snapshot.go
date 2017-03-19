@@ -47,6 +47,12 @@ type EbayItem struct {
 	ItemPageURL  string    `json:"url"`
 }
 
+// BGData is a partial representation ot the data JSON for a BG item
+type BGData struct {
+	Message string  `json:"message"`
+	Price   float64 `json:"final_price"`
+}
+
 func (snap *Snapshot) getBGAva(response *http.Response) {
 	// Scrape the page and get availability
 	log.Print("Scraping BG page to retrieve availability")
@@ -57,6 +63,16 @@ func (snap *Snapshot) getBGAva(response *http.Response) {
 	ava := doc.Find(".status").Text()
 	snap.Availability = ava
 	return
+}
+func (snap *Snapshot) getSourceData(response *http.Response) {
+	data := BGData{}
+	err := json.NewDecoder(response.Body).Decode(&data)
+	if err != nil {
+		log.Printf("Error while decoding BG data for item %s: %s", response.Request.URL, err)
+		return
+	}
+	snap.Availability = data.Message
+	snap.Price = data.Price
 }
 
 func (snap *Snapshot) getEbayStatus(response *http.Response) {

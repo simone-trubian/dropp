@@ -350,10 +350,10 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 	for _, item := range items {
 		log.Printf("Updating snapshot for item %s", item.SourceURL)
 		client := ufe.Client(ctx)
-		sourceResp, err := client.Get(item.SourceURL)
+		sourceResp, err := client.Get(item.DataURL)
 
 		if err != nil {
-			log.Printf("Error while fetching item source %s", err)
+			log.Printf("Error while fetching item data %s", err)
 			continue
 		} else {
 
@@ -384,7 +384,7 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 		snap := &Snapshot{}
 		snap.OnEbay = false
 		snap.CreatedAt = time.Now()
-		snap.getBGAva(sourceResp)
+		snap.getSourceData(sourceResp)
 		snap.getEbayStatus(ebayResp)
 		snapKey := db.NewIncompleteKey(ctx, "Snapshot", itemKey)
 		_, err = db.Put(ctx, snapKey, snap)
