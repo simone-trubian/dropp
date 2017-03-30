@@ -105,6 +105,7 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 			newDiff = SnapshotDiff{
 				ItemName:       item.ItemName,
 				ItemURL:        item.SourceURL,
+				EbayID:         item.EbayID,
 				PreviousAva:    currentSnapshots[1].Availability,
 				CurrentAva:     currentSnapshots[0].Availability,
 				PreviousStatus: currentSnapshots[1].OnEbay,

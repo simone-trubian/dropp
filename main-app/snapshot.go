@@ -25,6 +25,7 @@ type Snapshot struct {
 type SnapshotDiff struct {
 	ItemName       string
 	ItemURL        string
+	EbayID         string
 	PreviousAva    string
 	PreviousStatus bool
 	PreviousPrice  float64
