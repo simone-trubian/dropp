@@ -23,15 +23,17 @@ type Snapshot struct {
 // SnapshotDiff Is created if there is a difference between the current and the
 // previous snaphot.
 type SnapshotDiff struct {
-	ItemName       string
-	ItemURL        string
-	EbayID         string
-	PreviousAva    string
-	PreviousStatus bool
-	PreviousPrice  float64
-	CurrentAva     string
-	CurrentStatus  bool
-	CurrentPrice   float64
+	ItemName        string
+	ItemURL         string
+	EbayID          string
+	PreviousAva     string
+	PreviousAvaComp AvaComp
+	PreviousStatus  bool
+	PreviousPrice   float64
+	CurrentAva      string
+	CurrentAvaComp  AvaComp
+	CurrentStatus   bool
+	CurrentPrice    float64
 }
 
 // EbayPrice contains the price and currency as fetched from the Ebay service

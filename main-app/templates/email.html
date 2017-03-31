@@ -12,6 +12,10 @@
           {{.PreviousAva}}
           →
           {{.CurrentAva}}
+        <p><strong>Computed Availability</strong>
+          <font color="{{avaCol .PreviousAvaComp}}">{{.PreviousAvaComp}}</font>
+          →
+          <font color="{{avaCol .CurrentAvaComp}}">{{.CurrentAvaComp}}</font>
         <p><strong>On ebay</strong>
           {{if .PreviousStatus}}
           <font size="5" style="color:green">&#9745;</font> <!-- Ballot box with check -->

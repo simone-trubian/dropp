@@ -103,15 +103,17 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 			currentSnapshots[0].Price != currentSnapshots[1].Price {
 
 			newDiff = SnapshotDiff{
-				ItemName:       item.ItemName,
-				ItemURL:        item.SourceURL,
-				EbayID:         item.EbayID,
-				PreviousAva:    currentSnapshots[1].Availability,
-				CurrentAva:     currentSnapshots[0].Availability,
-				PreviousStatus: currentSnapshots[1].OnEbay,
-				CurrentStatus:  currentSnapshots[0].OnEbay,
-				PreviousPrice:  currentSnapshots[1].Price,
-				CurrentPrice:   currentSnapshots[0].Price,
+				ItemName:        item.ItemName,
+				ItemURL:         item.SourceURL,
+				EbayID:          item.EbayID,
+				PreviousAva:     currentSnapshots[1].Availability,
+				PreviousAvaComp: NewAva(currentSnapshots[1].Availability),
+				CurrentAva:      currentSnapshots[0].Availability,
+				CurrentAvaComp:  NewAva(currentSnapshots[0].Availability),
+				PreviousStatus:  currentSnapshots[1].OnEbay,
+				CurrentStatus:   currentSnapshots[0].OnEbay,
+				PreviousPrice:   currentSnapshots[1].Price,
+				CurrentPrice:    currentSnapshots[0].Price,
 			}
 
 			snapshotDiffs = append(snapshotDiffs, newDiff)
@@ -191,7 +193,7 @@ func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
 
 	t, err := tmpl.
 		New("email.html").
-		//Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
+		Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
 		ParseFiles("templates/email.html")
 	if err != nil {
 		panic(err.Error())
@@ -310,7 +312,7 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 	t, err := tmpl.
 		New("email.html").
-		//Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
+		Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
 		ParseFiles("templates/email.html")
 	if err != nil {
 		panic(err.Error())

@@ -106,12 +106,12 @@ func (av AvaComp) String() string {
 func AvaColor(av AvaComp) string {
 	switch av.Availability {
 	case Available:
-		return "color:green"
+		return "green"
 	case Low:
-		return "color:orange"
+		return "orange"
 	case Out:
-		return "color:red"
+		return "red"
 	default:
-		return "color:blue"
+		return "blue"
 	}
 }
