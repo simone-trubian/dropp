@@ -143,7 +143,6 @@ func init() {
 	}
 	api = newAPI()
 	http.Handle("/", api.registerMiddlewares(api.homePage))
-	http.Handle("/item", api.registerMiddlewares(api.item))
 	http.Handle("/upload_csv", api.registerMiddlewares(api.uploadCSV))
 	http.Handle("/snapshot", http.HandlerFunc(api.snapshot)) // FIXME registerMiddlewares
 	http.Handle(
@@ -159,33 +158,6 @@ func init() {
 
 func newAPI() *API {
 	return &API{}
-}
-
-func (a *API) item(w http.ResponseWriter, r *http.Request) {
-	ctx := gae.NewContext(r)
-
-	item := &Item{
-		SourceURL: r.FormValue("item-url-input"),
-		DataURL:   r.FormValue("item-data-input"),
-		EbayID:    r.FormValue("item-ebay-id-input"),
-		ItemName:  r.FormValue("item-name-input"),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	isActiveInput := r.FormValue("item-is-active-input")
-	if isActiveInput == "yes" {
-		item.IsActive = true
-	} else {
-		item.IsActive = false
-	}
-
-	key := db.NewKey(ctx, "Item", r.FormValue("item-source-name"), 0, nil)
-	_, err := db.Put(ctx, key, item)
-	if err != nil {
-		panic(err.Error())
-	}
-	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
@@ -458,3 +430,32 @@ func (a *API) authMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+/*
+func (a *API) item(w http.ResponseWriter, r *http.Request) {
+	ctx := gae.NewContext(r)
+
+	item := &Item{
+		SourceURL: r.FormValue("item-url-input"),
+		DataURL:   r.FormValue("item-data-input"),
+		EbayID:    r.FormValue("item-ebay-id-input"),
+		ItemName:  r.FormValue("item-name-input"),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	isActiveInput := r.FormValue("item-is-active-input")
+	if isActiveInput == "yes" {
+		item.IsActive = true
+	} else {
+		item.IsActive = false
+	}
+
+	key := db.NewKey(ctx, "Item", r.FormValue("item-source-name"), 0, nil)
+	_, err := db.Put(ctx, key, item)
+	if err != nil {
+		panic(err.Error())
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+*/
