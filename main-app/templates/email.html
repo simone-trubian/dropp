@@ -30,7 +30,16 @@
           {{end}}
           <a href="http://cgi.ebay.it/ws/eBayISAPI.dll?ViewItem&rd=1&item={{.EbayID}}"> Go to Ebay</a>
         </p>
-        <p><strong>Price</strong> {{.PreviousPrice}} → {{.CurrentPrice}}</p>
+        <p>
+          <strong>Price</strong> {{.PreviousPrice}} → {{.CurrentPrice}}
+          {{if eq .PreviousPrice .CurrentPrice}}
+          <font size="5" style="color:orange">&#5120;</font> <!-- ᐀ canadian syllabics hyphen -->
+          {{else if gt .PreviousPrice .CurrentPrice}}
+          <font size="5" style="font-weight:bolder;color:green">&darr;</font> <!-- ᐀ down arrow -->
+          {{else}}
+          <font size="5" style="font-weight:bolder;color:red">&uarr;</font> <!-- up arrow -->
+          {{end}}
+        </p>
       </li>
       {{end}}
     </ul>
