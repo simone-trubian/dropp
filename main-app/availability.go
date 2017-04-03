@@ -44,15 +44,10 @@ func NewAva(avaString string) AvaComp {
 		strings.Contains(avaString, "Expected restock on")
 
 	avaPredicate := avaString == "In stock, usually dispatched in 1 business day" ||
-		avaString == "In stock, usually dispatched in 1-3 business days"
+		avaString == "In stock, usually dispatched in 1-3 business days" ||
+		avaString == "In stock , usually dispatched in 1-3 business days"
 
 	switch {
-	// This usually happens when the URL is wrong or the item was removed
-	case avaString == "":
-		return AvaComp{
-			Availability: Unknown,
-			ItemCount:    0,
-		}
 	case outPredicate:
 		return AvaComp{
 			Availability: Out,
@@ -63,7 +58,7 @@ func NewAva(avaString string) AvaComp {
 			Availability: Available,
 			ItemCount:    0,
 		}
-	case strings.Contains(avaString, "usually dispatched in 1 business day"):
+	case strings.Contains(avaString, "Only"):
 		rx, _ := regexp.Compile("[0-9]+")
 		avaCount, _ := strconv.Atoi(rx.FindStringSubmatch(avaString)[0])
 		if avaCount <= threshold {
