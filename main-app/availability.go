@@ -41,6 +41,8 @@ func init() {
 func NewAva(avaString string) AvaComp {
 	outPredicate := avaString == "Currently out of stock" ||
 		avaString == "Usually dispatched in 6-9 business days" ||
+		avaString == "Under restocking. It will be available soon" ||
+		avaString == "Sold Out Currently!" ||
 		strings.Contains(avaString, "Expected restock on")
 
 	avaPredicate := avaString == "In stock, usually dispatched in 1 business day" ||
