@@ -78,10 +78,12 @@
     </div>
 
     <div class="container">
-      <form enctype="multipart/form-data" action="/upload_csv" method="post">
+      <form class="form-inline" enctype="multipart/form-data" action="/upload_csv" method="post">
         <div class="form-group row">
-          <input class="btn btn-secondary" type="file" name="uploadfile" />
-          <input class="btn btn-secondary" type="submit" value="Upload CSV" />
+          <label class="btn-file">
+            Upload CSV file <input type="file" name="uploadfile" hidden>
+          </label>
+          <input class="btn btn-default" type="submit" value="Upload" />
         </div>
      </form>
     </div>
