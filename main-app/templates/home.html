@@ -39,24 +39,7 @@
       crossorigin="anonymous">
     </script>
 
-    <script
-      type="text/javascript"
-      charset="utf8"
-      src="//cdn.datatables.net/1.10.13/js/jquery.dataTables.js">
-    </script>
-		<script type="text/javascript" charset="utf-8">
-			$(document).ready(function() {
-				$('#items').DataTable();
-			} );
-		</script>
 
-    <style>
-      .short-desc {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 20ch;
-      }
-    </style>
     <title>Welcome to Dropp</title>
   </head>
   <body>
@@ -86,28 +69,7 @@
     </nav>
 
     <div class="container">
-      <table id="items">
-        <thead>
-          <tr role="row">
-            <th>Item name</th>
-            <th>Ebay ID</th>
-            <th>Active</th>
-            <th>Source URL</th>
-            <th>Data URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range .Items}}
-            <tr role="row">
-              <td nowrap class="short-desc">{{.ItemName}}</td>
-              <td nowrap class="short-desc">{{.EbayID}}</td>
-              <td nowrap class="short-desc">{{.IsActive}}</td>
-              <td nowrap class="short-desc">{{.SourceURL}}</td>
-              <td nowrap class="short-desc">{{.DataURL}}</td>
-            </tr>
-          {{end}}
-        </tbody>
-      </table>
+      <p id="item-count"></p>
     </div>
 
     <div class="container">
@@ -122,13 +84,6 @@
         </div>
      </form>
     </div>
-
-    <script type="text/javascript">
-    	// For demo to fit into DataTables site builder...
-    	$('#items')
-    		.removeClass( 'display' )
-    		.addClass('table table-striped table-bordered');
-    </script>
 
   </body>
 </html>
