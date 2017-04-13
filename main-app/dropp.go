@@ -44,7 +44,7 @@ type Item struct {
 type HomeData struct {
 	CurrentUser *usr.User
 	LogoutURL   string
-	Items       *[]Item
+	ItemCount   int
 }
 
 func (a *API) newHomeData() HomeData {
@@ -179,9 +179,8 @@ func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
 func (a *API) homePage(w http.ResponseWriter, r *http.Request) {
 	ctx := gae.NewContext(r)
 	homeData := a.newHomeData()
-	items := make([]Item, 0, 10) // FIXME try using an array instead of a slice
-	_, err := db.NewQuery("Item").GetAll(ctx, &items)
-	homeData.Items = &items
+	itemCount, err := db.NewQuery("Item").Count(ctx)
+	homeData.ItemCount = itemCount
 
 	t, err := tmpl.ParseFiles("templates/home.html")
 	if err != nil {
