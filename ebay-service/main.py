@@ -1,8 +1,9 @@
-from json import dump
+from json import dumps
 
 from flask import Flask
 from flask_restful import Resource, Api
 from ebaysdk.trading import Connection as Trading
+from ebaysdk.exception import ConnectionError
 
 
 class Item(Resource):
@@ -42,7 +43,7 @@ class Item(Resource):
         try:
             item_response = ebayApi.execute('GetItem', {'ItemID': item_id})
         except ConnectionError as e:
-            return dump({'error': repr(e)})
+            return dumps({'error': repr(e)}), 404
         item_response_dict = item_response.dict()
 
         ebay_item = item_response_dict['Item']
