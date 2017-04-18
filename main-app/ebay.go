@@ -32,3 +32,26 @@ const (
 	// UnkEbay means the items status could not be retrieved
 	UnkEbay
 )
+
+func (es EbayStatus) String() string {
+	switch es {
+	case OnEbay:
+		return "☑" // Ballot box with check
+	case OffEbay:
+		return "☒" // Ballot box with cross
+	default:
+		return "■" // Black square
+	}
+}
+
+// EbayStatusColor returns the right HTML formatting color
+func EbayStatusColor(es EbayStatus) string {
+	switch es {
+	case OnEbay:
+		return "color:green"
+	case OffEbay:
+		return "color:red"
+	default:
+		return "color:blue"
+	}
+}

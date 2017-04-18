@@ -162,10 +162,14 @@ func newAPI() *API {
 
 func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
 	emailData := a.newEmailData(r)
+	emailFunctions := tmpl.FuncMap{
+		"avaCol":  AvaColor,
+		"ebayCol": EbayStatusColor,
+	}
 
 	t, err := tmpl.
 		New("email.html").
-		Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
+		Funcs(emailFunctions).
 		ParseFiles("templates/email.html")
 	if err != nil {
 		panic(err.Error())
@@ -310,8 +314,8 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
-	//ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/" // Production
-	ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
+	ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/" // Production
+	//ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
 
 	// Fetch the page
 	ctx := gae.NewContext(r)

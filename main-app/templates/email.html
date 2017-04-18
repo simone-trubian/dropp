@@ -17,17 +17,9 @@
           →
           <font color="{{avaCol .CurrentAvaComp}}">{{.CurrentAvaComp}}</font>
         <p><strong>On ebay</strong>
-          {{if .PreviousStatus}}
-          <font size="5" style="color:green">&#9745;</font> <!-- Ballot box with check -->
-          {{else}}
-          <font size="5" style="color:red">&#9746;</font> <!-- Ballot box with cross -->
-          {{end}}
+          <font size="5" style="{{ebayCol .PreviousStatus}}">{{.PreviousStatus}}</font>
           →
-          {{if .CurrentStatus}}
-          <font size="5" style="color:green">&#9745;</font> <!-- Ballot box with check -->
-          {{else}}
-          <font size="5" style="color:red">&#9746;</font> <!-- Ballot box with cross -->
-          {{end}}
+          <font size="5" style="{{ebayCol .CurrentStatus}}">{{.CurrentStatus}}</font>
           <a href="http://cgi.ebay.it/ws/eBayISAPI.dll?ViewItem&rd=1&item={{.EbayID}}"> Go to Ebay</a>
         </p>
         <p>
