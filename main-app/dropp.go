@@ -310,8 +310,8 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
-	ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/" // Production
-	//ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
+	//ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/" // Production
+	ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
 
 	// Fetch the page
 	ctx := gae.NewContext(r)
@@ -356,7 +356,7 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
 		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
 		snap := &Snapshot{}
-		snap.OnEbay = false
+		snap.OnEbay = OffEbay
 		snap.CreatedAt = time.Now()
 		snap.getSourceData(sourceResp)
 		snap.getEbayStatus(ebayResp)
