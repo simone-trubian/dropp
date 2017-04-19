@@ -162,15 +162,9 @@ func newAPI() *API {
 
 func (a *API) snapshot(w http.ResponseWriter, r *http.Request) {
 	emailData := a.newEmailData(r)
-	emailFunctions := tmpl.FuncMap{
-		"avaCol":  AvaColor,
-		"ebayCol": EbayStatusColor,
-	}
 
-	t, err := tmpl.
-		New("email.html").
-		Funcs(emailFunctions).
-		ParseFiles("templates/email.html")
+	t, err := getEmailTemplate()
+
 	if err != nil {
 		panic(err.Error())
 	}
@@ -285,12 +279,10 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 	var body bytes.Buffer
 
-	t, err := tmpl.
-		New("email.html").
-		Funcs(tmpl.FuncMap{"avaCol": AvaColor}).
-		ParseFiles("templates/email.html")
+	t, err := getEmailTemplate()
 	if err != nil {
-		panic(err.Error())
+		log.Printf("Error in generating template: %s", err)
+		return
 	}
 
 	err = t.Execute(&body, a.newEmailData(r))
@@ -432,6 +424,18 @@ func (a *API) authMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func getEmailTemplate() (*tmpl.Template, error) {
+	emailFunctions := tmpl.FuncMap{
+		"avaCol":  AvaColor,
+		"ebayCol": EbayStatusColor,
+	}
+
+	return tmpl.
+		New("email.html").
+		Funcs(emailFunctions).
+		ParseFiles("templates/email.html")
 }
 
 /*
