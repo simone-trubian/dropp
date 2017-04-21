@@ -34,7 +34,7 @@ class Item(Resource):
         the field returns the number of items sold.
         """
         if obj.get('ReasonHideFromSearch'):
-            return 0
+            return "0"
         else:
             return obj.get('Quantity')
 
