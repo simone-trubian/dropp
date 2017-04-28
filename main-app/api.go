@@ -260,9 +260,9 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mgs := &mail.Message{
-		Sender:   "Dropp <dropp@dropp-prod.appspotmail.com>",
-		To:       []string{"simone.trubian@gmail.com", "stoxx84@gmail.com"},
-		Subject:  "Daily Snapshot Report",
+		Sender:   conf.EmailSender,
+		To:       conf.EmailRecipients,
+		Subject:  conf.EmailSubject,
 		HTMLBody: body.String(),
 	}
 
@@ -274,8 +274,7 @@ func (a *API) sendReportEmail(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
-	ebayServURL := "https://ebay-dot-dropp-prod.appspot.com/item/" // Production
-	//ebayServURL := "http://127.0.0.1:9090/item/" // Local machine
+	ebayServURL := conf.EbayServURL
 
 	// Fetch the page
 	ctx := gae.NewContext(r)
@@ -343,3 +342,22 @@ func getEmailTemplate() (*tmpl.Template, error) {
 		Funcs(emailFunctions).
 		ParseFiles("templates/email.html")
 }
+
+/*
+Probabilmente esiste un modo piu semplice per calcolarlo, ma non ci arrivo...guarda se si capisce:
+
+input:
+L = PREZZO DA BANGGOOD in USD
+M = CAMBIO (per noi 1.05 fisso)
+PERC = PERCENTUALE DI MAGGIORAZIONE (per noi 40% fissa)
+S=prezzo spedizione standard (per noi 1.50 fisso, in futuro dovremmo capire se si riesce a leggere da BG e se conviene farlo)
+
+output:
+PV = prezzo di vendita su ebay, in EURO
+
+formule:
+N=(L/M)+S
+O=N*PERC
+Q=((N+O)*0.035)+0.35
+PV=(N+O+Q)+((N+O+Q)*0.087)
+*/
