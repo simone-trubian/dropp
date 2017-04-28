@@ -333,14 +333,19 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
 func getEmailTemplate() (*tmpl.Template, error) {
 	emailFunctions := tmpl.FuncMap{
-		"avaCol":  AvaColor,
-		"ebayCol": EbayStatusColor,
+		"avaCol":          AvaColor,
+		"ebayCol":         EbayStatusColor,
+		"targetEbayPrice": targetEbayPrice,
 	}
 
 	return tmpl.
 		New("email.html").
 		Funcs(emailFunctions).
 		ParseFiles("templates/email.html")
+}
+
+func targetEbayPrice(sourcePrice float64) float64 {
+	return 0
 }
 
 /*
