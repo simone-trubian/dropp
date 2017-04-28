@@ -1,4 +1,5 @@
 #pattern  filter=crypt diff=crypt
-settings/ebay.yaml  filter=crypt diff=crypt
+settings/ebay.yaml      filter=crypt diff=crypt
 settings/settings.yaml  filter=crypt diff=crypt
 ebay-service/ebay.yaml  filter=crypt diff=crypt
+main-app/conf.go        filter=crypt diff=crypt
