@@ -333,9 +333,8 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
 func getEmailTemplate() (*tmpl.Template, error) {
 	emailFunctions := tmpl.FuncMap{
-		"avaCol":          AvaColor,
-		"ebayCol":         EbayStatusColor,
-		"targetEbayPrice": targetEbayPrice,
+		"avaCol":  AvaColor,
+		"ebayCol": EbayStatusColor,
 	}
 
 	return tmpl.
@@ -343,26 +342,3 @@ func getEmailTemplate() (*tmpl.Template, error) {
 		Funcs(emailFunctions).
 		ParseFiles("templates/email.html")
 }
-
-func targetEbayPrice(sourcePrice float64) float64 {
-	return 0
-}
-
-/*
-Probabilmente esiste un modo piu semplice per calcolarlo, ma non ci arrivo...guarda se si capisce:
-
-input:
-L = PREZZO DA BANGGOOD in USD
-M = CAMBIO (per noi 1.05 fisso)
-PERC = PERCENTUALE DI MAGGIORAZIONE (per noi 40% fissa)
-S=prezzo spedizione standard (per noi 1.50 fisso, in futuro dovremmo capire se si riesce a leggere da BG e se conviene farlo)
-
-output:
-PV = prezzo di vendita su ebay, in EURO
-
-formule:
-N=(L/M)+S
-O=N*PERC
-Q=((N+O)*0.035)+0.35
-PV=(N+O+Q)+((N+O+Q)*0.087)
-*/
