@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	pst "github.com/sethgrid/pester"
 	gae "google.golang.org/appengine"
 	db "google.golang.org/appengine/datastore"
 	mail "google.golang.org/appengine/mail"
@@ -278,56 +279,62 @@ func (a *API) createSnapshots(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch the page
 	ctx := gae.NewContext(r)
-	items := make([]Item, 0, 10)
+	items := make([]Item, 0)
 	_, err := db.
 		NewQuery("Item").
 		Filter("IsActive =", true).
 		GetAll(ctx, &items)
+	if err != nil { // If the DB doesn't return a list of items fail right away
+		panic(err.Error())
+	}
+
+	client := pst.NewExtendedClient(ufe.Client(ctx))
+	client.Concurrency = 3
+	client.MaxRetries = 1
+	client.Backoff = pst.ExponentialJitterBackoff
+	client.KeepLog = true
 
 	for _, item := range items {
 		log.Printf("Updating snapshot for item %s", item.SourceURL)
-		client := ufe.Client(ctx)
+		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
+		snap := &Snapshot{}
+		snap.CreatedAt = time.Now()
+
+		// Fetch BangGood data
 		sourceResp, err := client.Get(item.DataURL)
-
 		if err != nil {
-			log.Printf("Error while fetching item data %s", err)
-			continue
+			log.Printf("Error while fetching item data %s", client.LogString())
 		} else {
-
-			defer func() {
-				err := sourceResp.Body.Close()
-				if err != nil {
-					log.Printf("Error while closing BG page %s", err)
-				}
-			}()
-
+			snap.getSourceData(sourceResp)
 		}
 
+		defer func() {
+			log.Printf("Closing BG response body %p", sourceResp)
+			err := sourceResp.Body.Close()
+			if err != nil {
+				log.Printf("Error while closing BG page %s", err)
+			}
+		}()
+
+		// Fetch Ebay status
 		ebayResp, err := client.Get(ebayServURL + item.EbayID)
 		if err != nil {
 			log.Printf("Error while fetching Ebay item status %s", err)
-			continue
 		} else {
-
-			defer func() {
-				err := ebayResp.Body.Close()
-				if err != nil {
-					log.Printf("Error while closing BG page %s", err)
-				}
-			}()
+			snap.getEbayStatus(ebayResp)
 		}
 
-		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
-		snap := &Snapshot{}
-		snap.OnEbay = OffEbay
-		snap.CreatedAt = time.Now()
-		snap.getSourceData(sourceResp)
-		snap.getEbayStatus(ebayResp)
+		defer func(ebayResp *http.Response) {
+			log.Printf("Closing Ebay response body %p", ebayResp)
+			err := ebayResp.Body.Close()
+			if err != nil {
+				log.Printf("Error while closing Ebay service response %s", client.LogString())
+			}
+		}(ebayResp)
+
+		// Create snapshot
 		snapKey := db.NewIncompleteKey(ctx, "Snapshot", itemKey)
 		_, err = db.Put(ctx, snapKey, snap)
-	}
-	if err != nil {
-		panic(err.Error())
 	}
 }
 
@@ -342,3 +349,44 @@ func getEmailTemplate() (*tmpl.Template, error) {
 		Funcs(emailFunctions).
 		ParseFiles("templates/email.html")
 }
+
+/*
+	package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func add1(s []int, d time.Duration, c chan int, done chan bool) {
+	for _, v := range s {
+		time.Sleep(d * time.Second)
+		c <- v + 1
+		done <- false
+	}
+	done <- true
+}
+
+func main() {
+	var p1 []int
+	var p2 []int
+
+	s := []int{1, 1, 1, 1, 1, 1}
+
+	c := make(chan int, len(s))
+	done1 := make(chan bool)
+	done1 := make(chan bool)
+	go add1(s,1, c, done1)
+	go add1(s,1, c, done2)
+
+	for !(<- done2) {
+		p = append(p, <- c)
+	}
+
+	for !(<- done2) {
+		p = append(p, <- c)
+	}
+
+	fmt.Println(p)
+}
+*/

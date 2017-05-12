@@ -39,25 +39,26 @@ class Item(Resource):
             return obj.get('Quantity')
 
     def get(self, item_id):
+        return dumps({'error': 'none'}), 404
 
-        try:
-            item_response = ebayApi.execute('GetItem', {'ItemID': item_id})
-        except ConnectionError as e:
-            return dumps({'error': repr(e)}), 404
-        item_response_dict = item_response.dict()
+        #try:
+        #    item_response = ebayApi.execute('GetItem', {'ItemID': item_id})
+        #except ConnectionError as e:
+        #    return dumps({'error': repr(e)}), 404
+        #item_response_dict = item_response.dict()
 
-        ebay_item = item_response_dict['Item']
-        dropp_item = {
-            'name': ebay_item['Title'],
-            'id': ebay_item['ItemID'],
-            'url': ebay_item['ListingDetails']['ViewItemURL'],
-            'quantity': self._get_quantity(ebay_item),
-            'current_price': ebay_item['SellingStatus']['CurrentPrice'],
-            'quantity_sold': ebay_item['SellingStatus']['QuantitySold'],
-            'status': self._get_status(ebay_item)
-        }
+        #ebay_item = item_response_dict['Item']
+        #dropp_item = {
+        #    'name': ebay_item['Title'],
+        #    'id': ebay_item['ItemID'],
+        #    'url': ebay_item['ListingDetails']['ViewItemURL'],
+        #    'quantity': self._get_quantity(ebay_item),
+        #    'current_price': ebay_item['SellingStatus']['CurrentPrice'],
+        #    'quantity_sold': ebay_item['SellingStatus']['QuantitySold'],
+        #    'status': self._get_status(ebay_item)
+        #}
 
-        return dropp_item
+        #return dropp_item
 
 
 domain = 'api.ebay.com'
