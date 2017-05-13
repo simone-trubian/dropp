@@ -86,16 +86,16 @@ func (av AvaComp) String() string {
 	switch av.Availability {
 	case Available:
 		if av.ItemCount == 0 {
-			return "Item available"
+			return "Available"
 		}
-		return strconv.Itoa(av.ItemCount) + " Items available"
+		return strconv.Itoa(av.ItemCount) + " Items"
 
 	case Low:
-		return "Item low: only " + strconv.Itoa(av.ItemCount) + " items left"
+		return "Low: " + strconv.Itoa(av.ItemCount)
 	case Out:
-		return "Out of stock"
+		return "Out"
 	default:
-		return "Could not update availability"
+		return "Unknown"
 	}
 }
 
@@ -103,12 +103,12 @@ func (av AvaComp) String() string {
 func AvaColor(av AvaComp) string {
 	switch av.Availability {
 	case Available:
-		return "green"
+		return "color:green"
 	case Low:
-		return "orange"
+		return "color:orange"
 	case Out:
-		return "red"
+		return "color:red"
 	default:
-		return "blue"
+		return "color:blue"
 	}
 }

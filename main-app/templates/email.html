@@ -136,16 +136,14 @@
                     </tr>
                     <tr>
                       <td>
-                        <!-- <strong>Computed Availability</strong> -->
-                        <font color="{{avaCol .PreviousAvaComp}}">{{.PreviousAvaComp}}</font>
+                        <font style="{{avaCol .PreviousAvaComp}}">{{.PreviousAvaComp}}</font>
                         →
-                        <font color="{{avaCol .CurrentAvaComp}}">{{.CurrentAvaComp}}</font>
+                        <font style="{{avaCol .CurrentAvaComp}}">{{.CurrentAvaComp}}</font>
                       </td>
                     </tr>
 
                     <tr>
                       <td>
-                        <!-- <strong>On ebay</strong> -->
                         <font size="5" style="{{ebayCol .PreviousStatus}}">{{.PreviousStatus}}</font>
                         →
                         <font size="5" style="{{ebayCol .CurrentStatus}}">{{.CurrentStatus}}</font>
@@ -155,7 +153,6 @@
 
                     <tr>
                       <td>
-                        <!-- <strong>Price</strong> -->
                         {{if eq .PreviousPrice .CurrentPrice}}
                           <font size="5" style="color:orange">&#5120;</font> <!-- ᐀ canadian syllabics hyphen -->
                         {{else if gt .PreviousPrice .CurrentPrice}}
