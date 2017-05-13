@@ -71,13 +71,13 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 		currentSnapshots = []Snapshot{}
 		// Get last two snaphots
 		itemKey := db.NewKey(ctx, "Item", item.SourceURL, 0, nil)
-		_, err =
-			db.
-				NewQuery("Snapshot").
-				Ancestor(itemKey).
-				Order("-CreatedAt").
-				Limit(2).
-				GetAll(ctx, &currentSnapshots)
+		_, err = db.
+			NewQuery("Snapshot").
+			Ancestor(itemKey).
+			Order("-CreatedAt").
+			Limit(2).
+			GetAll(ctx, &currentSnapshots)
+
 		if err != nil {
 			panic(err.Error())
 		}
@@ -92,7 +92,10 @@ func (a *API) newEmailData(r *http.Request) EmailData {
 		// ATTENTION!!!!!
 		// As the qurey is ordered in descending order the first element of the
 		// list is the MOST RECENT!!!!
-		if currentSnapshots[0].Availability != currentSnapshots[1].Availability ||
+		currentAva := NewAva(currentSnapshots[0].Availability)
+		previousAva := NewAva(currentSnapshots[1].Availability)
+
+		if currentAva != previousAva ||
 			currentSnapshots[0].OnEbay != currentSnapshots[1].OnEbay ||
 			currentSnapshots[0].Price != currentSnapshots[1].Price {
 
