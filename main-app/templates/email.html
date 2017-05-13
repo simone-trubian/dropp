@@ -16,10 +16,27 @@
    }
    a:link {
      text-decoration: none;
+     color: #003366;
    }
 
    a:visited {
      text-decoration: none;
+     color: purple;
+   }
+
+   ol {
+     list-style-type: decimal;
+     margin: 0;
+     padding: 0;
+   }
+
+   ol li table {
+     display: inline-block;
+     vertical-align:top;
+   }
+
+   li {
+     padding-bottom: 20px;
    }
 
    table {
@@ -28,6 +45,10 @@
 
    table td {
      border-collapse: collapse;
+   }
+
+   table th {
+     padding-bottom: 8px;
    }
 
    .ExternalClass {
@@ -92,7 +113,7 @@
       <br>
 
       <!-- 600px container (white background) -->
-      <table border="0" width="600" cellpadding="0" cellspacing="0" class="container" style="width:600px;max-width:600px">
+      <table border="0" width="600" cellpadding="0" cellspacing="0" class="container" style="width:800px;max-width:800px">
         <tr>
           <td class="container-padding header" align="left" style="font-family:Helvetica, Arial, sans-serif;font-size:24px;font-weight:bold;padding-bottom:12px;color:#3399ff;padding-left:24px;padding-right:24px">
             Onda Market report at {{ .LastUpdate }}
@@ -109,33 +130,43 @@
               <ol>
                 {{range .SnapDiffs}}
                 <li>
-                  <h4><a href="{{.ItemURL}}">{{.ItemName}}</a></h4>
-                  <p>
-                    <!-- <strong>Computed Availability</strong> -->
-                    <font color="{{avaCol .PreviousAvaComp}}">{{.PreviousAvaComp}}</font>
-                    →
-                    <font color="{{avaCol .CurrentAvaComp}}">{{.CurrentAvaComp}}</font>
-                  </p>
+                  <table>
+                    <tr>
+                      <th><a href="{{.ItemURL}}">{{.ItemName}}</a></th>
+                    </tr>
+                    <tr>
+                      <td>
+                        <!-- <strong>Computed Availability</strong> -->
+                        <font color="{{avaCol .PreviousAvaComp}}">{{.PreviousAvaComp}}</font>
+                        →
+                        <font color="{{avaCol .CurrentAvaComp}}">{{.CurrentAvaComp}}</font>
+                      </td>
+                    </tr>
 
-                  <p>
-                    <!-- <strong>On ebay</strong> -->
-                    <font size="5" style="{{ebayCol .PreviousStatus}}">{{.PreviousStatus}}</font>
-                    →
-                    <font size="5" style="{{ebayCol .CurrentStatus}}">{{.CurrentStatus}}</font>
-                    <a href="http://cgi.ebay.it/ws/eBayISAPI.dll?ViewItem&rd=1&item={{.EbayID}}"> Go to Ebay</a>
-                  </p>
+                    <tr>
+                      <td>
+                        <!-- <strong>On ebay</strong> -->
+                        <font size="5" style="{{ebayCol .PreviousStatus}}">{{.PreviousStatus}}</font>
+                        →
+                        <font size="5" style="{{ebayCol .CurrentStatus}}">{{.CurrentStatus}}</font>
+                        <a href="http://cgi.ebay.it/ws/eBayISAPI.dll?ViewItem&rd=1&item={{.EbayID}}"> Go to Ebay</a>
+                      </td>
+                    </tr>
 
-                  <p>
-                    <!-- <strong>Price</strong> -->
-                    {{.PreviousPrice}} → {{.CurrentPrice}}
-                    {{if eq .PreviousPrice .CurrentPrice}}
-                    <font size="5" style="color:orange">&#5120;</font> <!-- ᐀ canadian syllabics hyphen -->
-                    {{else if gt .PreviousPrice .CurrentPrice}}
-                    <font size="5" style="font-weight:bolder;color:green">&darr;</font> <!-- ᐀ down arrow -->
-                    {{else}}
-                    <font size="5" style="font-weight:bolder;color:red">&uarr;</font> <!-- up arrow -->
-                    {{end}}
-                  </p>
+                    <tr>
+                      <td>
+                        <!-- <strong>Price</strong> -->
+                        {{if eq .PreviousPrice .CurrentPrice}}
+                          <font size="5" style="color:orange">&#5120;</font> <!-- ᐀ canadian syllabics hyphen -->
+                        {{else if gt .PreviousPrice .CurrentPrice}}
+                          <font size="5" style="font-weight:bolder;color:green">&darr;</font> <!-- ᐀ down arrow -->
+                        {{else}}
+                          <font size="5" style="font-weight:bolder;color:red">&uarr;</font> <!-- up arrow -->
+                        {{end}}
+                        {{.PreviousPrice}} → {{.CurrentPrice}}
+                      </td>
+                    </tr>
+                  </table>
 
                 </li>
                 {{end}}
