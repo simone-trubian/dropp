@@ -131,7 +131,11 @@
                       <th><a href="{{.ItemURL}}">{{.ItemName}}</a></th>
                     </tr>
                     <tr>
-                      <td>
+                      <td
+                        {{if or (ne .PreviousAvaComp.Availability .CurrentAvaComp.Availability) (ne .PreviousAvaComp.ItemCount .CurrentAvaComp.ItemCount)}}
+                          style="background-color:#e6e6e6"
+                        {{end}}
+                      >
                         <font style="{{avaCol .PreviousAvaComp}}">{{.PreviousAvaComp}}</font>
                         →
                         <font style="{{avaCol .CurrentAvaComp}}">{{.CurrentAvaComp}}</font>
@@ -139,7 +143,11 @@
                     </tr>
 
                     <tr>
-                      <td>
+                      <td
+                        {{if ne .PreviousStatus .CurrentStatus}}
+                          style="background-color:#e6e6e6"
+                        {{end}}
+                      >
                         <font size="5" style="{{ebayCol .PreviousStatus}}">{{.PreviousStatus}}</font>
                         →
                         <font size="5" style="{{ebayCol .CurrentStatus}}">{{.CurrentStatus}}</font>
@@ -148,7 +156,11 @@
                     </tr>
 
                     <tr>
-                      <td>
+                      <td
+                        {{if ne .PreviousPrice .CurrentPrice}}
+                          style="background-color:#e6e6e6"
+                        {{end}}
+                      >
                         {{if eq .PreviousPrice .CurrentPrice}}
                           <font size="5" style="color:orange">&#5120;</font> <!-- ᐀ canadian syllabics hyphen -->
                         {{else if gt .PreviousPrice .CurrentPrice}}
