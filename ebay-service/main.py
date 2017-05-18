@@ -1,4 +1,5 @@
 from json import dumps
+import logging
 
 from flask import Flask
 from flask_restful import Resource, Api
@@ -41,8 +42,9 @@ class Item(Resource):
     def get(self, item_id):
 
         try:
-            item_response = ebayApi.execute('GetItem', {'ItemID': item_id})
+            item_response = ebayApi.execute('GetItem', {'ItemI': item_id})
         except ConnectionError as e:
+            logging.warning("Ebay connection error: ", repr(e))
             return dumps({'error': repr(e)}), 404
         item_response_dict = item_response.dict()
 
