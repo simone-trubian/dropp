@@ -2,6 +2,8 @@ from json import dumps
 import logging
 
 from flask import Flask
+import config
+import google.cloud.logging
 from flask_restful import Resource, Api
 from ebaysdk.trading import Connection as Trading
 from ebaysdk.exception import ConnectionError
@@ -44,7 +46,7 @@ class Item(Resource):
         try:
             item_response = ebayApi.execute('GetItem', {'ItemI': item_id})
         except ConnectionError as e:
-            logging.warning("Ebay connection error: ", repr(e))
+            logging.warning("Ebay connection error: ")
             return dumps({'error': repr(e)}), 404
         item_response_dict = item_response.dict()
 
@@ -62,6 +64,8 @@ class Item(Resource):
         return dropp_item
 
 
+client = google.cloud.logging.Client(config.PROJECT_ID)
+client.setup_logging(logging.WARNING)
 domain = 'api.ebay.com'
 ebay_config_file = './ebay.yaml'
 ebayApi = Trading(
